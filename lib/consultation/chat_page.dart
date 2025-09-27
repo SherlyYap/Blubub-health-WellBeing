@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_chat_ui/flutter_chat_ui.dart';
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
@@ -13,7 +14,11 @@ class ChatPage extends StatefulWidget {
 }
 
 class _ChatPageState extends State<ChatPage> {
+  final _messageController = StreamController<List<types.Message>>.broadcast();
+  final ScrollController _scrollController = ScrollController();
   List<types.Message> _messages = [];
+  bool _isTyping = false;
+
   final types.User _user = const types.User(id: 'user');
   final types.User _doctor = const types.User(id: 'doctor');
 
@@ -23,16 +28,40 @@ class _ChatPageState extends State<ChatPage> {
     _addWelcomeMessage();
   }
 
+  @override
+  void dispose() {
+    _messageController.close();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
   void _addWelcomeMessage() {
     final msg = types.TextMessage(
       author: _doctor,
       createdAt: DateTime.now().millisecondsSinceEpoch,
       id: const Uuid().v4(),
-      text: "Halo, saya Dr. ${widget.doctorName}. Apa yang bisa saya bantu hari ini?",
+      text:
+          "Halo, saya Dr. ${widget.doctorName}. Apa yang bisa saya bantu hari ini?",
     );
 
-    setState(() {
-      _messages.insert(0, msg);
+    _messages.insert(0, msg);
+    _updateMessages();
+  }
+
+  void _updateMessages() {
+    if (!_messageController.isClosed) {
+      _messageController.add(List.from(_messages));
+    }
+
+    // Scroll ke atas biar pesan baru kelihatan
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          0.0,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
     });
   }
 
@@ -44,35 +73,71 @@ class _ChatPageState extends State<ChatPage> {
       text: message.text,
     );
 
-    setState(() {
-      _messages.insert(0, textMessage);
-    });
+    _messages.insert(0, textMessage);
+    _updateMessages();
 
     _simulateDoctorReply(message.text);
   }
 
-  void _simulateDoctorReply(String userText) {
-    Future.delayed(const Duration(seconds: 1), () {
-      final reply = types.TextMessage(
-        author: _doctor,
-        createdAt: DateTime.now().millisecondsSinceEpoch,
-        id: const Uuid().v4(),
-        text: _generateReply(userText),
-      );
+  void _simulateDoctorReply(String userText) async {
+    setState(() {
+      _isTyping = true;
+    });
 
-      setState(() {
-        _messages.insert(0, reply);
-      });
+    // Delay mengetik tergantung panjang pesan user
+    final typingDelay = Duration(milliseconds: 1500 + userText.length * 50);
+    await Future.delayed(typingDelay);
+
+    final reply = types.TextMessage(
+      author: _doctor,
+      createdAt: DateTime.now().millisecondsSinceEpoch,
+      id: const Uuid().v4(),
+      text: _generateReply(userText),
+    );
+
+    _messages.insert(0, reply);
+    _updateMessages();
+
+    setState(() {
+      _isTyping = false;
     });
   }
 
   String _generateReply(String userText) {
-    if (userText.toLowerCase().contains("cemas")) {
-      return "Rasa cemas itu wajar. Coba tarik napas perlahan dan ceritakan lebih banyak ya.";
-    } else if (userText.toLowerCase().contains("tidur")) {
-      return "Masalah tidur bisa disebabkan stres atau pola hidup. Kamu tidur jam berapa biasanya?";
+    final text = userText.toLowerCase();
+
+    if (text.contains("hai") || text.contains("halo") || text.contains("hi")) {
+      return "Hai juga! Gimana kabarmu hari ini? Kalau lagi ngerasa gak enak badan atau pikiran, boleh banget cerita ke aku ya.";
+    } else if (text.contains("pagi")) {
+      return "Selamat pagi! Ada keluhan atau hal yang ingin dibicarakan hari ini?";
+    } else if (text.contains("siang")) {
+      return "Selamat siang! Ada yang bisa saya bantu?";
+    } else if (text.contains("sore")) {
+      return "Selamat sore! Ceritain ke aku ya, gimana harimu?";
+    } else if (text.contains("malam")) {
+      return "Selamat malam! Sebelum tidur, boleh cerita sedikit biar pikiran lebih tenang.";
+    } else if (text.contains("terima kasih") || text.contains("makasih")) {
+      return "Sama-sama~ Senang bisa bantu kamu! Kalau masih ada yang mau ditanyain, jangan sungkan ya 😊";
+    } else if (text.contains("cerita")) {
+      return "Boleh banget! Ceritain aja, aku siap dengerin dan bantu sebisaku.";
+    } else if (text.contains("cemas")) {
+      return "Wajar kok ngerasa cemas. Coba atur napas pelan-pelan, tenangkan diri dulu. Ceritain ke aku biar kita bisa cari penyebabnya bareng.";
+    } else if (text.contains("stres") || text.contains("stress")) {
+      return "Stres bisa datang dari banyak hal. Coba luangkan waktu buat diri sendiri dulu, kayak jalan santai, meditasi, atau denger musik yang kamu suka.";
+    } else if (text.contains("sedih") || text.contains("kecewa")) {
+      return "Sedih itu manusiawi kok. Tapi jangan lupa buat jaga diri ya. Kadang istirahat atau ngobrol sama orang dekat bisa bantu sedikit lega.";
+    } else if (text.contains("tidur")) {
+      return "Masalah tidur sering banget terjadi. Coba hindari HP atau kopi sebelum tidur, dan biasakan jam tidur yang teratur ya.";
+    } else if (text.contains("capek") || text.contains("lelah")) {
+      return "Capek ya? Kadang tubuh juga butuh istirahat sejenak. Jangan lupa minum air putih dan makan teratur juga ya.";
+    } else if (text.contains("marah")) {
+      return "Kalau lagi marah, gak apa-apa kok. Tapi coba kasih waktu buat tenang dulu. Nulis perasaanmu di catatan bisa bantu loh.";
+    } else if (text.contains("sendiri") || text.contains("kesepian")) {
+      return "Perasaan sendiri itu berat ya. Coba hubungi teman atau keluarga, atau keluar cari suasana baru, kadang bisa bantu perasaanmu lebih baik.";
+    } else if (text.contains("tidak baik") || text.contains("kurang baik")) {
+      return "Lagi gak enak badan ya? Mau cerita sedikit soal apa yang kamu rasain biar aku bisa bantu?";
     } else {
-      return "Saya mengerti. Terima kasih sudah berbagi, mari kita bahas lebih lanjut.";
+      return "Hmm, aku paham kok. Ceritain lebih lanjut ya biar aku bisa bantu lebih banyak 😊";
     }
   }
 
@@ -90,15 +155,52 @@ class _ChatPageState extends State<ChatPage> {
         ),
         backgroundColor: const Color(0xff0D273D),
       ),
-      body: Chat(
-        messages: _messages,
-        onSendPressed: _handleSendPressed,
-        user: _user,
-        theme: const DefaultChatTheme(
-          primaryColor: Color(0xff0D273D),
-          inputBackgroundColor: Colors.white,
-          inputTextColor: Colors.black,
-        ),
+      body: Column(
+        children: [
+          Expanded(
+            child: StreamBuilder<List<types.Message>>(
+              stream: _messageController.stream,
+              initialData: _messages,
+              builder: (context, snapshot) {
+                final messages = snapshot.data ?? [];
+                return Chat(
+                  messages: messages,
+                  onSendPressed: _handleSendPressed,
+                  user: _user,
+                  theme: const DefaultChatTheme(
+                    primaryColor: Color(0xff0D273D),
+                    inputBackgroundColor: Colors.white,
+                    inputTextColor: Colors.black,
+                  ),
+                );
+              },
+            ),
+          ),
+          if (_isTyping)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  const SizedBox(width: 16),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      "Dr. ${widget.doctorName} sedang mengetik...",
+                      style: GoogleFonts.nunito(fontSize: 13),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
       ),
     );
   }
