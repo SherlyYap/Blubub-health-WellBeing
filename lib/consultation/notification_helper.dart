@@ -2,13 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:overlay_support/overlay_support.dart';
 import 'package:project/consultation/notification.dart';
-import 'package:project/navigation_service.dart'; 
+import 'package:project/navigation_service.dart';
+import 'package:project/consultation/notification_data.dart'; // ✅
 
 void showCustomNotification({
   required String title,
   required String message,
 }) {
   OverlaySupportEntry? entry;
+
+  // ✅ Simpan ke SharedPreferences
+  saveNotification(title, message);
+
   entry = showSimpleNotification(
     GestureDetector(
       onTap: () {
@@ -36,7 +41,7 @@ void showCustomNotification({
         ],
       ),
     ),
-    background: Color(0xff0D273D),
+    background: const Color(0xff0D273D),
     duration: const Duration(seconds: 5),
   );
 }

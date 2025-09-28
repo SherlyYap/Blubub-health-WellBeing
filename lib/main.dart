@@ -6,21 +6,26 @@ import 'onboarding.dart';
 import 'package:overlay_support/overlay_support.dart';
 import 'package:project/provider/favorite_provider.dart'; 
 import 'package:project/navigation_service.dart';
+import 'package:project/consultation/notification_data.dart'; // ✅ tambah ini
 
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
 
-void main() {
-runApp(
-  OverlaySupport.global(
-    child: MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => ShopProvider()),
-        ChangeNotifierProvider(create: (_) => ThemeProvider()),
-        ChangeNotifierProvider(create: (_) => FavoriteProvider()),
-      ],
-      child: const MyApp(),
+  // ✅ Load notifikasi dari SharedPreferences sebelum runApp
+  await loadNotifications();
+
+  runApp(
+    OverlaySupport.global(
+      child: MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => ShopProvider()),
+          ChangeNotifierProvider(create: (_) => ThemeProvider()),
+          ChangeNotifierProvider(create: (_) => FavoriteProvider()),
+        ],
+        child: const MyApp(),
+      ),
     ),
-  ),
-);
+  );
 }
 
 class MyApp extends StatelessWidget {
