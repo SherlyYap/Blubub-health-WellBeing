@@ -28,8 +28,8 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      userName = prefs.getString('name') ?? 'Guest';
-      userEmail = prefs.getString('email') ?? 'No email';
+      userName = prefs.getString('loggedInName') ?? 'Guest';
+      userEmail = prefs.getString('loggedInEmail') ?? 'No email';
     });
   }
 
@@ -40,12 +40,8 @@ class _ProfilePageState extends State<ProfilePage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xff0D273D)),
-          onPressed: () => Navigator.pop(context),
-        ),
         title: Text(
-          'Edit Profile',
+          'Profile',
           style: GoogleFonts.nunito(
             color: const Color(0xff0D273D),
             fontWeight: FontWeight.bold,
@@ -71,53 +67,12 @@ class _ProfilePageState extends State<ProfilePage> {
             userEmail,
             style: GoogleFonts.nunito(fontSize: 16, color: Colors.black54),
           ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ElevatedButton.icon(
-                onPressed: () async {
-                  final newUsername = await Navigator.push<String>(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const EditProfilePage(),
-                    ),
-                  );
-
-                  if (newUsername != null && newUsername.isNotEmpty) {
-                    setState(() {
-                      userName = newUsername;
-                    });
-                  }
-                },
-                icon: const Icon(Icons.edit, color: Colors.black),
-                label: Text(
-                  'edit profile',
-                  style: GoogleFonts.nunito(
-                    color: Colors.black,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white.withOpacity(0.9),
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-            ],
-          ),
           const SizedBox(height: 24),
           Expanded(
             child: ListView(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               children: [
+                _buildProfileOption(Icons.edit, 'Edit Profile'),
                 _buildProfileOption(Icons.favorite_border, 'Favorites'),
                 _buildProfileOption(Icons.logout, 'Logout'),
               ],
@@ -205,6 +160,7 @@ class _ProfilePageState extends State<ProfilePage> {
             if (confirm == true) {
               final prefs = await SharedPreferences.getInstance();
               await prefs.clear();
+              await prefs.setBool('isLoggedIn', false); // tambahan penting ✅
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(
@@ -218,6 +174,19 @@ class _ProfilePageState extends State<ProfilePage> {
               context,
               MaterialPageRoute(builder: (_) => FavoriteDoctorsPage()),
             );
+          } else if (title == 'Edit Profile') {
+            final newUsername = await Navigator.push<String>(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const EditProfilePage(),
+              ),
+            );
+
+            if (newUsername != null && newUsername.isNotEmpty) {
+              setState(() {
+                userName = newUsername;
+              });
+            }
           }
         },
       ),

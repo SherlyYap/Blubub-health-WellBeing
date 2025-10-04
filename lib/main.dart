@@ -4,7 +4,7 @@ import 'provider/theme_provider.dart';
 import 'package:provider/provider.dart';
 import 'onboarding.dart';
 import 'package:overlay_support/overlay_support.dart';
-import 'package:project/provider/favorite_provider.dart'; 
+import 'package:project/provider/favorite_provider.dart';
 import 'package:project/navigation_service.dart';
 import 'package:project/consultation/notification_data.dart'; // ✅ tambah ini
 
@@ -34,7 +34,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    
+
     return MaterialApp(
       navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
@@ -66,7 +66,7 @@ class MyApp extends StatelessWidget {
           unselectedItemColor: Colors.white70,
         ),
       ),
-      themeMode: themeProvider.themeMode, 
+      themeMode: themeProvider.themeMode,
       home: const SplashScreen(),
     );
   }
@@ -88,13 +88,16 @@ class _SplashScreenState extends State<SplashScreen> {
         context,
         PageRouteBuilder(
           transitionDuration: const Duration(milliseconds: 600),
-          pageBuilder: (context, animation, secondaryAnimation) =>
-              const OnboardingScreen(),
+          pageBuilder:
+              (context, animation, secondaryAnimation) =>
+                  const OnboardingScreen(),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            const begin = Offset(1.0, 0.0); 
+            const begin = Offset(1.0, 0.0);
             const end = Offset.zero;
-            final tween = Tween(begin: begin, end: end)
-                .chain(CurveTween(curve: Curves.easeInOut));
+            final tween = Tween(
+              begin: begin,
+              end: end,
+            ).chain(CurveTween(curve: Curves.easeInOut));
             final offsetAnimation = animation.drive(tween);
 
             return SlideTransition(position: offsetAnimation, child: child);
@@ -111,11 +114,7 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Image.asset(
-              'img-project/logo.png',
-              width: 350,
-              height: 350,
-            ),
+            Image.asset('img-project/logo.png', width: 350, height: 350),
             const SizedBox(height: 8),
           ],
         ),

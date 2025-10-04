@@ -29,7 +29,7 @@ class _MainMenuPageState extends State<MainMenuPage> {
   Future<void> _loadUserName() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      userName = prefs.getString('name') ?? 'Guest';
+      userName = prefs.getString('loggedInName') ?? 'Guest';
     });
   }
 
@@ -124,6 +124,7 @@ class _MainMenuPageState extends State<MainMenuPage> {
                 if (confirmLogout == true) {
                   final prefs = await SharedPreferences.getInstance();
                   await prefs.clear();
+                  await prefs.setBool('isLoggedIn', false);
                   Navigator.pushAndRemoveUntil(
                     context,
                     MaterialPageRoute(

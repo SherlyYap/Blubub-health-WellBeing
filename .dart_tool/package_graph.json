@@ -19,11 +19,13 @@
         "intl",
         "just_audio",
         "overlay_support",
+        "path",
         "percent_indicator",
         "pie_chart",
         "provider",
         "shared_preferences",
         "smooth_page_indicator",
+        "sqflite",
         "table_calendar",
         "uuid"
       ],
@@ -94,6 +96,23 @@
         "test_api",
         "vector_math",
         "vm_service"
+      ]
+    },
+    {
+      "name": "path",
+      "version": "1.9.1",
+      "dependencies": []
+    },
+    {
+      "name": "sqflite",
+      "version": "2.4.2",
+      "dependencies": [
+        "flutter",
+        "path",
+        "sqflite_android",
+        "sqflite_common",
+        "sqflite_darwin",
+        "sqflite_platform_interface"
       ]
     },
     {
@@ -524,11 +543,6 @@
       ]
     },
     {
-      "name": "path",
-      "version": "1.9.1",
-      "dependencies": []
-    },
-    {
       "name": "matcher",
       "version": "0.12.17",
       "dependencies": [
@@ -552,6 +566,47 @@
         "stream_channel",
         "string_scanner",
         "term_glyph"
+      ]
+    },
+    {
+      "name": "sqflite_common",
+      "version": "2.5.6",
+      "dependencies": [
+        "meta",
+        "path",
+        "synchronized"
+      ]
+    },
+    {
+      "name": "sqflite_platform_interface",
+      "version": "2.4.0",
+      "dependencies": [
+        "flutter",
+        "meta",
+        "platform",
+        "plugin_platform_interface",
+        "sqflite_common"
+      ]
+    },
+    {
+      "name": "sqflite_darwin",
+      "version": "2.4.2",
+      "dependencies": [
+        "flutter",
+        "meta",
+        "path",
+        "sqflite_common",
+        "sqflite_platform_interface"
+      ]
+    },
+    {
+      "name": "sqflite_android",
+      "version": "2.4.1",
+      "dependencies": [
+        "flutter",
+        "path",
+        "sqflite_common",
+        "sqflite_platform_interface"
       ]
     },
     {
@@ -895,6 +950,16 @@
       "dependencies": []
     },
     {
+      "name": "synchronized",
+      "version": "3.3.1",
+      "dependencies": []
+    },
+    {
+      "name": "platform",
+      "version": "3.1.6",
+      "dependencies": []
+    },
+    {
       "name": "xml",
       "version": "6.5.0",
       "dependencies": [
@@ -1011,11 +1076,6 @@
       ]
     },
     {
-      "name": "synchronized",
-      "version": "3.3.1",
-      "dependencies": []
-    },
-    {
       "name": "file_selector_windows",
       "version": "0.9.3+4",
       "dependencies": [
@@ -1092,11 +1152,6 @@
       "dependencies": [
         "source_span"
       ]
-    },
-    {
-      "name": "platform",
-      "version": "3.1.6",
-      "dependencies": []
     },
     {
       "name": "xdg_directories",

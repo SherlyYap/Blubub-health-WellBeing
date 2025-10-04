@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:project/database_auth/db_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -12,33 +13,52 @@ class ForgotPasswordPage extends StatefulWidget {
 class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   final TextEditingController emailOrUserController = TextEditingController();
   final TextEditingController newPasswordController = TextEditingController();
-  final TextEditingController confirmNewPasswordController = TextEditingController();
+  final TextEditingController confirmNewPasswordController =
+      TextEditingController();
 
   final _formKey = GlobalKey<FormState>();
+  bool _isLoading = false;
 
   Future<void> _resetPassword() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final prefs = await SharedPreferences.getInstance();
-    String storedEmail = prefs.getString('email') ?? '';
-    String storedName = prefs.getString('name') ?? '';
-    String input = emailOrUserController.text.trim();
-    String newPassword = newPasswordController.text;
-    String confirmNewPassword = confirmNewPasswordController.text;
-
-    if (input != storedEmail && input != storedName) {
-      _showSnackbar("Email atau username tidak cocok!");
-      return;
-    }
+    final input = emailOrUserController.text.trim();
+    final newPassword = newPasswordController.text;
+    final confirmNewPassword = confirmNewPasswordController.text;
 
     if (newPassword != confirmNewPassword) {
       _showSnackbar("Konfirmasi password tidak cocok!");
       return;
     }
 
-    await prefs.setString('password', newPassword);
-    _showSnackbar("Password berhasil direset!");
-    Navigator.pop(context); 
+    setState(() => _isLoading = true);
+
+    try {
+      // Update password di SQLite berdasarkan email OR name
+      final updated = await DBHelper.updatePassword(input, newPassword);
+
+      if (updated > 0) {
+        // Jika berhasil update DB, periksa apakah user yang sedang login sama,
+        // jika iya update juga SharedPreferences agar session sinkron.
+        final prefs = await SharedPreferences.getInstance();
+        final loggedEmail = prefs.getString('loggedInEmail') ?? '';
+        final loggedName = prefs.getString('loggedInName') ?? '';
+
+        if (input == loggedEmail || input == loggedName) {
+          await prefs.setString('password', newPassword);
+        }
+
+        _showSnackbar("Password berhasil direset!");
+        if (mounted) Navigator.pop(context);
+      } else {
+        // Tidak ada baris yang diupdate -> user tidak ditemukan
+        _showSnackbar("Akun tidak ditemukan (email/username salah).");
+      }
+    } catch (e) {
+      _showSnackbar("Gagal reset password: ${e.toString()}");
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   void _showSnackbar(String message) {
@@ -53,6 +73,14 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   }
 
   @override
+  void dispose() {
+    emailOrUserController.dispose();
+    newPasswordController.dispose();
+    confirmNewPasswordController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xffc1e8ff),
@@ -62,7 +90,8 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         iconTheme: const IconThemeData(color: Colors.black),
         title: const Text(
           'Lupa Password',
-          style: TextStyle(color: Color(0xff0D273D), fontWeight: FontWeight.bold),
+          style:
+              TextStyle(color: Color(0xff0D273D), fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
       ),
@@ -78,7 +107,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   controller: emailOrUserController,
                   label: "Email atau Username",
                   icon: Icons.person,
-                  keyboardType: TextInputType.emailAddress,
+                  keyboardType: TextInputType.text,
                   textInputAction: TextInputAction.next,
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
@@ -117,21 +146,25 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   onFieldSubmitted: (_) => _resetPassword(),
                 ),
                 const SizedBox(height: 32),
-                ElevatedButton(
-                  onPressed: _resetPassword,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xff0D273D),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 80, vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  child: Text(
-                    "Reset Password",
-                    style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                ),
+                _isLoading
+                    ? const CircularProgressIndicator()
+                    : ElevatedButton(
+                        onPressed: _resetPassword,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xff0D273D),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 80, vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        child: Text(
+                          "Reset Password",
+                          style: GoogleFonts.nunito(
+                              fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                      ),
               ],
             ),
           ),
@@ -164,7 +197,8 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         labelStyle: GoogleFonts.nunito(),
         filled: true,
         fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );

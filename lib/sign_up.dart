@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '/sign_in.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:project/database_auth/db_helper.dart';
+import 'sign_in.dart';
 
 class SignUp extends StatefulWidget {
   const SignUp({super.key});
@@ -14,8 +14,7 @@ class _SignUpState extends State<SignUp> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController =
-      TextEditingController();
+  final TextEditingController confirmPasswordController = TextEditingController();
 
   bool _isLoading = false;
 
@@ -29,10 +28,7 @@ class _SignUpState extends State<SignUp> {
     String password = passwordController.text;
     String confirmPassword = confirmPasswordController.text;
 
-    if (name.isEmpty ||
-        email.isEmpty ||
-        password.isEmpty ||
-        confirmPassword.isEmpty) {
+    if (name.isEmpty || email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
       _showSnackbar("Semua field harus diisi!");
       return;
     }
@@ -46,21 +42,19 @@ class _SignUpState extends State<SignUp> {
       _showSnackbar("Password minimal 8 karakter!");
       return;
     }
+
     if (password != confirmPassword) {
       _showSnackbar("Password dan konfirmasi tidak cocok!");
       return;
     }
 
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('email', email);
-    await prefs.setString('password', password);
-    await prefs.setString('name', name);
-
     setState(() {
       _isLoading = true;
     });
 
-    Future.delayed(const Duration(seconds: 2), () {
+    try {
+      await DBHelper.insertUser(name, email, password);
+
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -73,7 +67,12 @@ class _SignUpState extends State<SignUp> {
           MaterialPageRoute(builder: (_) => const SignIn()),
         );
       }
-    });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      _showSnackbar("Gagal daftar: ${e.toString()}");
+    }
   }
 
   void _showSnackbar(String message) {
@@ -118,7 +117,6 @@ class _SignUpState extends State<SignUp> {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
     return Scaffold(
       backgroundColor: const Color(0xffc1e8ff),
       body: Stack(
@@ -131,7 +129,7 @@ class _SignUpState extends State<SignUp> {
               child: LinearProgressIndicator(
                 minHeight: 5,
                 backgroundColor: Colors.white,
-                color: const Color(0XFF031716),
+                color: Color(0XFF031716),
               ),
             ),
           Positioned(
@@ -141,14 +139,13 @@ class _SignUpState extends State<SignUp> {
             child: Column(
               children: [
                 Image.asset(
-                  'img-project/logo.png', 
-                  width: 300, 
+                  'img-project/logo.png',
+                  width: 300,
                   height: 300,
                 ),
               ],
             ),
           ),
-
           Positioned(
             top: 300,
             left: 0,
@@ -197,12 +194,7 @@ class _SignUpState extends State<SignUp> {
                     ElevatedButton(
                       onPressed: _handleSignUp,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color.fromARGB(
-                          255,
-                          202,
-                          231,
-                          255,
-                        ),
+                        backgroundColor: const Color.fromARGB(255, 202, 231, 255),
                         foregroundColor: Colors.black,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 80,
@@ -239,7 +231,7 @@ class _SignUpState extends State<SignUp> {
                           child: Text(
                             "Login",
                             style: GoogleFonts.nunito(
-                              color: const Color(0xff0D273D),
+                              color: Color(0xff0D273D),
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
                             ),

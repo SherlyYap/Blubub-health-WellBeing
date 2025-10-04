@@ -4,6 +4,7 @@ import 'package:project/forgot_password.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'ProfilPage.dart';
 import 'sign_up.dart';
+import 'database_auth/db_helper.dart';
 
 class SignIn extends StatefulWidget {
   const SignIn({super.key});
@@ -17,22 +18,25 @@ class _SignInState extends State<SignIn> {
   final TextEditingController _passwordController = TextEditingController();
 
   Future<void> _handleSignIn() async {
-    final prefs = await SharedPreferences.getInstance();
-    String? savedEmail = prefs.getString('email')?.trim();
-    String? savedUsername = prefs.getString('name')?.trim();
-    String? savedPassword = prefs.getString('password');
-    String? savedName = prefs.getString('name');
-
-    String inputEmail = _emailController.text.trim();
+    String inputEmailOrUsername = _emailController.text.trim();
     String inputPassword = _passwordController.text;
 
-    if (inputEmail.isEmpty || inputPassword.isEmpty) {
+    if (inputEmailOrUsername.isEmpty || inputPassword.isEmpty) {
       _showSnackbar("Mohon isi semua field");
       return;
     }
 
-    if ((inputEmail == savedEmail || inputEmail == savedName) &&
-        inputPassword == savedPassword) {
+    // ✅ Cari user di database dengan email/username + password
+    final user = await DBHelper.getUser(inputEmailOrUsername, inputPassword);
+
+    if (user != null) {
+      // ✅ Simpan status login ke SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('isLoggedIn', true);
+      await prefs.setString('loggedInEmail', user['email']);
+      await prefs.setString('loggedInName', user['name']);
+
+      // ✅ Arahkan ke ProfilePage
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const ProfilePage()),
@@ -148,8 +152,12 @@ class _SignInState extends State<SignIn> {
                     ElevatedButton(
                       onPressed: _handleSignIn,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            const Color.fromARGB(255, 202, 231, 255),
+                        backgroundColor: const Color.fromARGB(
+                          255,
+                          202,
+                          231,
+                          255,
+                        ),
                         foregroundColor: Colors.black,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 80,
@@ -180,9 +188,7 @@ class _SignInState extends State<SignIn> {
                           onTap: () {
                             Navigator.pushReplacement(
                               context,
-                              MaterialPageRoute(
-                                builder: (_) => const SignUp(),
-                              ),
+                              MaterialPageRoute(builder: (_) => const SignUp()),
                             );
                           },
                           child: Text(
