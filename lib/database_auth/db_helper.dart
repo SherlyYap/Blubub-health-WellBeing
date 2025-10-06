@@ -7,10 +7,12 @@ class DBHelper {
   static Future<Database> initDb() async {
     if (_db != null) return _db!;
     String path = join(await getDatabasesPath(), 'user.db');
+
     _db = await openDatabase(
       path,
-      version: 1,
+      version: 2, // ⬅️ ubah versi jadi 2 biar tabel bahan dibuat juga
       onCreate: (db, version) async {
+        // 🔹 Buat tabel users (kode lama tetap)
         await db.execute('''
           CREATE TABLE users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -19,10 +21,47 @@ class DBHelper {
             password TEXT
           )
         ''');
+
+        // 🔹 Buat tabel bahan (tabel baru)
+        await db.execute('''
+          CREATE TABLE bahan (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nama TEXT,
+            harga INTEGER,
+            tersedia INTEGER,
+            gambar TEXT,
+            satuan TEXT,
+            kategori TEXT,
+            jumlahPembelian INTEGER
+          )
+        ''');
+      },
+
+      // Jika update versi database (misal dari 1 ke 2)
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS bahan (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              nama TEXT,
+              harga INTEGER,
+              tersedia INTEGER,
+              gambar TEXT,
+              satuan TEXT,
+              kategori TEXT,
+              jumlahPembelian INTEGER
+            )
+          ''');
+        }
       },
     );
+
     return _db!;
   }
+
+  // ===========================
+  // ====== BAGIAN USER ========
+  // ===========================
 
   static Future<int> insertUser(String name, String email, String password) async {
     final db = await initDb();
@@ -37,7 +76,6 @@ class DBHelper {
     );
   }
 
-  /// Cari user berdasarkan email OR name dan password (dipakai untuk sign in)
   static Future<Map<String, dynamic>?> getUser(String emailOrName, String password) async {
     final db = await initDb();
     final res = await db.query(
@@ -50,8 +88,6 @@ class DBHelper {
     return null;
   }
 
-  /// Update password berdasarkan email OR name.
-  /// Mengembalikan jumlah baris yang diupdate (int).
   static Future<int> updatePassword(String emailOrName, String newPassword) async {
     final db = await initDb();
     final count = await db.update(
@@ -61,5 +97,31 @@ class DBHelper {
       whereArgs: [emailOrName, emailOrName],
     );
     return count;
+  }
+
+  // ===========================
+  // ====== BAGIAN BAHAN =======
+  // ===========================
+
+  /// Insert satu bahan
+  static Future<int> insertBahan(Map<String, dynamic> data) async {
+    final db = await initDb();
+    return await db.insert(
+      'bahan',
+      data,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  /// Ambil semua bahan dari tabel
+  static Future<List<Map<String, dynamic>>> getAllBahan() async {
+    final db = await initDb();
+    return await db.query('bahan');
+  }
+
+  /// Hapus semua bahan (opsional)
+  static Future<void> clearBahan() async {
+    final db = await initDb();
+    await db.delete('bahan');
   }
 }

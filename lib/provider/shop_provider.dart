@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:project/database_auth/db_helper.dart';
 import 'package:project/health_food/shop/data_bahan.dart';
 
 class Bahan {
@@ -9,7 +10,7 @@ class Bahan {
   final String satuan;
   final String kategori;
   int jumlahPembelian;
-  int jumlah; 
+  int jumlah;
 
   Bahan({
     required this.nama,
@@ -21,6 +22,32 @@ class Bahan {
     this.jumlahPembelian = 0,
     this.jumlah = 1,
   });
+
+  /// 🔹 Convert ke Map untuk disimpan di SQLite
+  Map<String, dynamic> toMap() {
+    return {
+      'nama': nama,
+      'harga': harga,
+      'tersedia': tersedia ? 1 : 0,
+      'gambar': gambar,
+      'satuan': satuan,
+      'kategori': kategori,
+      'jumlahPembelian': jumlahPembelian,
+    };
+  }
+
+  /// 🔹 Convert dari Map (ambil dari SQLite)
+  factory Bahan.fromMap(Map<String, dynamic> map) {
+    return Bahan(
+      nama: map['nama'],
+      harga: map['harga'],
+      tersedia: map['tersedia'] == 1,
+      gambar: map['gambar'],
+      satuan: map['satuan'],
+      kategori: map['kategori'],
+      jumlahPembelian: map['jumlahPembelian'] ?? 0,
+    );
+  }
 }
 
 class ShopProvider extends ChangeNotifier {
@@ -28,14 +55,31 @@ class ShopProvider extends ChangeNotifier {
   bool isSwitched = false;
   String _searchQuery = '';
 
-  final List<Bahan> semuaBahan = semuaBahanList;
+  List<Bahan> semuaBahan = [];
   final List<Bahan> _keranjang = [];
 
   List<Bahan> get keranjang => _keranjang;
-
   int get totalKeranjang => _keranjang.length;
-
   int totalHarga() => _keranjang.fold(0, (total, item) => total + item.harga * item.jumlah);
+
+  /// 🔹 Ambil data bahan dari database
+  Future<void> loadBahanFromDb() async {
+    final dbData = await DBHelper.getAllBahan();
+
+    if (dbData.isEmpty) {
+      // kalau belum ada data, seed dari data_bahan.dart
+      for (var bahan in semuaBahanList) {
+        await DBHelper.insertBahan(bahan.toMap());
+      }
+      semuaBahan = semuaBahanList;
+      print('✅ Data awal bahan disimpan ke database');
+    } else {
+      semuaBahan = dbData.map((e) => Bahan.fromMap(e)).toList();
+      print('✅ Data bahan diambil dari database');
+    }
+
+    notifyListeners();
+  }
 
   List<Bahan> get filteredItems {
     return semuaBahan.where((bahan) {
@@ -46,18 +90,14 @@ class ShopProvider extends ChangeNotifier {
     }).toList();
   }
 
- List<Bahan> getTopItems(String kategori, [int count = 5]) {
-  final items = semuaBahan
-      .where((item) => item.kategori == kategori)
-      .toList();
-
-  items.sort((a, b) => b.jumlahPembelian.compareTo(a.jumlahPembelian));
-
-  return items.take(count).toList();
-}
+  List<Bahan> getTopItems(String kategori, [int count = 5]) {
+    final items = semuaBahan.where((item) => item.kategori == kategori).toList();
+    items.sort((a, b) => b.jumlahPembelian.compareTo(a.jumlahPembelian));
+    return items.take(count).toList();
+  }
 
   void setSearchQuery(String value) {
-    _searchQuery = value; 
+    _searchQuery = value;
     notifyListeners();
   }
 

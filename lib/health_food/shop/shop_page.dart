@@ -9,42 +9,51 @@ class ShopPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text('Healthy Food Shop', style: GoogleFonts.nunito()),
-          backgroundColor: const Color.fromARGB(255, 202, 231, 255),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-          bottom: TabBar(
-            indicatorColor: Colors.white,
-            labelStyle: GoogleFonts.nunito(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-              color: const Color(0xff0D273D),
+    final provider = Provider.of<ShopProvider>(context, listen: false);
+
+    return FutureBuilder(
+      future: provider.loadBahanFromDb(), // 🔹 Load data dari DB di awal
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        return DefaultTabController(
+          length: 2,
+          child: Scaffold(
+            appBar: AppBar(
+              title: Text('Healthy Food Shop', style: GoogleFonts.nunito()),
+              backgroundColor: const Color.fromARGB(255, 202, 231, 255),
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+              bottom: TabBar(
+                indicatorColor: Colors.white,
+                labelStyle: GoogleFonts.nunito(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: const Color(0xff0D273D),
+                ),
+                tabs: const [Tab(text: 'Vegetable'), Tab(text: 'Meat')],
+              ),
             ),
-            tabs: const [Tab(text: 'Vegetable'), Tab(text: 'Meat')],
-          ),
-        ),
-        body: const TabBarView(
-          children: [
-            BahanMakananTab(category: 'Vegetable'),
-            BahanMakananTab(category: 'Meat'),
-          ],
-        ),
-        floatingActionButton: Consumer<ShopProvider>(
-          builder:
-              (context, provider, child) => Stack(
+            body: const TabBarView(
+              children: [
+                BahanMakananTab(category: 'Vegetable'),
+                BahanMakananTab(category: 'Meat'),
+              ],
+            ),
+            floatingActionButton: Consumer<ShopProvider>(
+              builder: (context, provider, child) => Stack(
                 children: [
                   FloatingActionButton(
-                    onPressed:
-                        () => Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const CartPage()),
-                        ),
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const CartPage()),
+                    ),
                     child: const Icon(Icons.shopping_cart),
                   ),
                   if (provider.keranjang.isNotEmpty)
@@ -65,8 +74,10 @@ class ShopPage extends StatelessWidget {
                     ),
                 ],
               ),
-        ),
-      ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -85,125 +96,128 @@ class BahanMakananTab extends StatelessWidget {
 
     double width = MediaQuery.of(context).size.width;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const CircleAvatar(
-                radius: 30,
-                backgroundImage: AssetImage('img-project/profile.png'),
-              ),
-              const SizedBox(width: 16),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Selamat datang, Groupie!',
-                    style: GoogleFonts.nunito(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+    return RefreshIndicator(
+      onRefresh: () async => await provider.loadBahanFromDb(), // 🔄 Pull to refresh DB
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const CircleAvatar(
+                  radius: 30,
+                  backgroundImage: AssetImage('img-project/profile.png'),
+                ),
+                const SizedBox(width: 16),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Selamat datang, Groupie!',
+                      style: GoogleFonts.nunito(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Nikmati belanja $category sehat',
-                    style: GoogleFonts.nunito(
-                      fontSize: 14,
-                      color: const Color(0xff0D273D),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Nikmati belanja $category sehat',
+                      style: GoogleFonts.nunito(
+                        fontSize: 14,
+                        color: const Color(0xff0D273D),
+                      ),
                     ),
-                  ),
-                  Text(
-                    'Pesan sekarang!',
-                    style: GoogleFonts.nunito(
-                      fontSize: 14,
-                      color: const Color(0xff0D273D),
+                    Text(
+                      'Pesan sekarang!',
+                      style: GoogleFonts.nunito(
+                        fontSize: 14,
+                        color: const Color(0xff0D273D),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: AspectRatio(
-              aspectRatio: 16 / 6, 
-              child: Image.asset(
-                'img-project/banner_healthyfood.jpeg',
-                width: double.infinity,
-                fit: BoxFit.cover,
-              ),
+                  ],
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            onChanged: provider.setSearchQuery,
-            decoration: InputDecoration(
-              hintText: 'Cari produk...',
-              hintStyle: GoogleFonts.nunito(),
-              prefixIcon: const Icon(Icons.search),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(6),
+            const SizedBox(height: 16),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: AspectRatio(
+                aspectRatio: 16 / 6,
+                child: Image.asset(
+                  'img-project/banner_healthyfood.jpeg',
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Switch(
-                value: provider.isSwitched,
-                onChanged: provider.toggleSwitch,
+            const SizedBox(height: 16),
+            TextField(
+              onChanged: provider.setSearchQuery,
+              decoration: InputDecoration(
+                hintText: 'Cari produk...',
+                hintStyle: GoogleFonts.nunito(),
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(6),
+                ),
               ),
-              Text('Stok Tersedia', style: GoogleFonts.nunito()),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Text(
-            'Populer',
-            style: GoogleFonts.nunito(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
             ),
-          ),
-          const SizedBox(height: 8),
-          SizedBox(
-            height: 220,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: popularItems.take(5).length,
-              separatorBuilder: (_, __) => const SizedBox(width: 10),
-              itemBuilder:
-                  (context, index) => ProductCard(
-                    item: popularItems[index],
-                    isHorizontal: true,
-                  ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Switch(
+                  value: provider.isSwitched,
+                  onChanged: provider.toggleSwitch,
+                ),
+                Text('Stok Tersedia', style: GoogleFonts.nunito()),
+              ],
             ),
-          ),
-          const SizedBox(height: 20),
-          Text(
-            'Semua Produk',
-            style: GoogleFonts.nunito(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+            const SizedBox(height: 20),
+            Text(
+              'Populer',
+              style: GoogleFonts.nunito(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: items.length,
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: width < 360 ? 2 : 2,
-              mainAxisSpacing: 10,
-              crossAxisSpacing: 10,
-              childAspectRatio: width < 360 ? 0.7 : 0.9,
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 220,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: popularItems.take(5).length,
+                separatorBuilder: (_, __) => const SizedBox(width: 10),
+                itemBuilder: (context, index) => ProductCard(
+                  item: popularItems[index],
+                  isHorizontal: true,
+                ),
+              ),
             ),
-            itemBuilder: (context, index) => ProductCard(item: items[index]),
-          ),
-        ],
+            const SizedBox(height: 20),
+            Text(
+              'Semua Produk',
+              style: GoogleFonts.nunito(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: items.length,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: width < 360 ? 2 : 2,
+                mainAxisSpacing: 10,
+                crossAxisSpacing: 10,
+                childAspectRatio: width < 360 ? 0.7 : 0.9,
+              ),
+              itemBuilder: (context, index) => ProductCard(item: items[index]),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -222,7 +236,7 @@ class ProductCard extends StatelessWidget {
 
     return SizedBox(
       width: isHorizontal ? 140 : null,
-      height: isHorizontal ? 200 : null, 
+      height: isHorizontal ? 200 : null,
       child: Card(
         elevation: 3,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -230,7 +244,8 @@ class ProductCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(10)),
               child: Image.asset(
                 item.gambar,
                 height: isHorizontal ? 90 : (isSmallScreen ? 80 : 100),
@@ -292,12 +307,14 @@ class ProductCard extends StatelessWidget {
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(6),
                                 ),
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                tapTargetSize:
+                                    MaterialTapTargetSize.shrinkWrap,
                               ),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  const Icon(Icons.shopping_cart_outlined, size: 13),
+                                  const Icon(Icons.shopping_cart_outlined,
+                                      size: 13),
                                   const SizedBox(width: 4),
                                   Text(
                                     'Add',
