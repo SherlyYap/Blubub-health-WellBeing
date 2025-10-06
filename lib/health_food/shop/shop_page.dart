@@ -105,7 +105,7 @@ class BahanMakananTab extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              children: [
+              children: [ 
                 const CircleAvatar(
                   radius: 30,
                   backgroundImage: AssetImage('img-project/profile.png'),
@@ -139,18 +139,6 @@ class BahanMakananTab extends StatelessWidget {
                   ],
                 ),
               ],
-            ),
-            const SizedBox(height: 16),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: AspectRatio(
-                aspectRatio: 16 / 6,
-                child: Image.asset(
-                  'img-project/banner_healthyfood.jpeg',
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                ),
-              ),
             ),
             const SizedBox(height: 16),
             TextField(
@@ -278,7 +266,7 @@ class ProductCard extends StatelessWidget {
                     Text(
                       item.satuan,
                       style: GoogleFonts.nunito(
-                        fontSize: 10,
+                        fontSize: 12,
                         color: Colors.black54,
                       ),
                     ),
