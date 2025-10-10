@@ -146,7 +146,7 @@ class SelfAwarenessPage extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const SelfCarePage(),
+                          builder: (context) => SelfCarePage(),
                         ),
                       );
                     },
