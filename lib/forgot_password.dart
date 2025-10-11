@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:project/database_auth/db_helper.dart';
+import 'package:project/database/db_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
 

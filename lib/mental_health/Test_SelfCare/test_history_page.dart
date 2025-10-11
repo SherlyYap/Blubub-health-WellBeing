@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:project/database_auth/test_history_db.dart';
+import 'package:project/database/test_history_db.dart';
 
 class TestHistoryPage extends StatefulWidget {
   const TestHistoryPage({super.key});

@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:project/database_auth/db_helper.dart';
+import 'package:project/database/db_bahan_helper.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class HistoryPage extends StatefulWidget {
@@ -21,7 +21,7 @@ class _HistoryPageState extends State<HistoryPage> {
   }
 
   Future<void> _loadHistory() async {
-    final data = await DBHelper.getPurchaseHistory();
+    final data = await BahanDBHelper.getPurchaseHistory();
     setState(() => historyList = data);
   }
 

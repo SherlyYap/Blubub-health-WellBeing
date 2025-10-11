@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:project/database_auth/db_helper.dart';
+import 'package:project/database/db_bahan_helper.dart'; // ✅ gunakan ini
 import 'package:project/health_food/shop/data_bahan.dart';
 
 class Bahan {
@@ -62,12 +62,12 @@ class ShopProvider extends ChangeNotifier {
   int totalHarga() =>
       _keranjang.fold(0, (total, item) => total + item.harga * item.jumlah);
 
-  /// Load bahan dari DB (jika kosong isi default)
+  /// 🔹 Load bahan dari DB (jika kosong isi default)
   Future<void> loadBahanFromDb() async {
-    final dbData = await DBHelper.getAllBahan();
+    final dbData = await BahanDBHelper.getAllBahan(); // ✅ pakai BahanDBHelper
     if (dbData.isEmpty) {
       for (var bahan in semuaBahanList) {
-        await DBHelper.insertBahan(bahan.toMap());
+        await BahanDBHelper.insertBahan(bahan.toMap());
       }
       semuaBahan = semuaBahanList;
     } else {
@@ -76,7 +76,7 @@ class ShopProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Filter berdasarkan kategori, switch, dan pencarian
+  /// 🔹 Filter berdasarkan kategori, switch, dan pencarian
   List<Bahan> get filteredItems {
     return semuaBahan.where((bahan) {
       final cocokKategori =
@@ -105,7 +105,7 @@ class ShopProvider extends ChangeNotifier {
     }
   }
 
-  /// Tambah item ke keranjang
+  /// 🔹 Tambah item ke keranjang
   void tambahKeKeranjang(Bahan bahan) {
     final index = _keranjang.indexWhere((item) => item.nama == bahan.nama);
     if (index != -1) {
@@ -123,13 +123,13 @@ class ShopProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Hapus item dari keranjang
+  /// 🔹 Hapus item dari keranjang
   void removeFromKeranjang(Bahan bahan) {
     _keranjang.remove(bahan);
     notifyListeners();
   }
 
-  /// Tambah jumlah di keranjang
+  /// 🔹 Tambah jumlah di keranjang
   void tambahJumlah(Bahan bahan) {
     final index = _keranjang.indexOf(bahan);
     if (index != -1) {
@@ -138,7 +138,7 @@ class ShopProvider extends ChangeNotifier {
     }
   }
 
-  /// Kurangi jumlah di keranjang
+  /// 🔹 Kurangi jumlah di keranjang
   void kurangJumlah(Bahan bahan) {
     final index = _keranjang.indexOf(bahan);
     if (index != -1 && _keranjang[index].jumlah > 1) {
@@ -149,40 +149,45 @@ class ShopProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// 🔹 Checkout dan simpan ke riwayat
   Future<void> checkout(String metodePembayaran) async {
-  if (_keranjang.isEmpty) return;
+    if (_keranjang.isEmpty) return;
 
-  for (var item in _keranjang) {
-    final index = semuaBahan.indexWhere((b) => b.nama == item.nama);
-    if (index != -1) {
-      semuaBahan[index].jumlahPembelian += item.jumlah;
-      await DBHelper.updateBahan(semuaBahan[index].toMap());
+    for (var item in _keranjang) {
+      final index = semuaBahan.indexWhere((b) => b.nama == item.nama);
+      if (index != -1) {
+        semuaBahan[index].jumlahPembelian += item.jumlah;
+        await BahanDBHelper.updateBahan(semuaBahan[index].toMap()); // ✅
+      }
     }
+
+    final itemsJson = jsonEncode(
+      _keranjang.map((item) {
+        return {
+          'nama': item.nama,
+          'jumlah': item.jumlah,
+          'harga': item.harga,
+          'total': item.harga * item.jumlah,
+        };
+      }).toList(),
+    );
+
+    await BahanDBHelper.insertPurchaseHistory( // ✅
+      itemsJson,
+      totalHarga(),
+      metodePembayaran,
+    );
+
+    _keranjang.clear();
+    notifyListeners();
   }
-
-  final itemsJson = jsonEncode(
-    _keranjang.map((item) {
-      return {
-        'nama': item.nama,
-        'jumlah': item.jumlah,
-        'harga': item.harga,
-        'total': item.harga * item.jumlah,
-      };
-    }).toList(),
-  );
-
-  await DBHelper.insertPurchaseHistory(itemsJson, totalHarga(), metodePembayaran);
-
-  _keranjang.clear();
-  notifyListeners();
-}
 
   // ================= HISTORY ==================
   List<Map<String, dynamic>> _historyList = [];
   List<Map<String, dynamic>> get historyList => _historyList;
 
   Future<void> loadHistory() async {
-    final data = await DBHelper.getPurchaseHistory();
+    final data = await BahanDBHelper.getPurchaseHistory(); // ✅
     _historyList = data;
     notifyListeners();
   }
