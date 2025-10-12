@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_chat_ui/flutter_chat_ui.dart';
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
 import 'package:uuid/uuid.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:project/database/db_chat_helper.dart'; // file database helper
 
 class ChatPage extends StatefulWidget {
   final String doctorName;
@@ -25,7 +27,7 @@ class _ChatPageState extends State<ChatPage> {
   @override
   void initState() {
     super.initState();
-    _addWelcomeMessage();
+    _loadMessagesFromDb();
   }
 
   @override
@@ -35,7 +37,28 @@ class _ChatPageState extends State<ChatPage> {
     super.dispose();
   }
 
-  void _addWelcomeMessage() {
+  Future<void> _loadMessagesFromDb() async {
+    final chatData = await DBChatHelper.getMessages(widget.doctorName);
+    setState(() {
+      _messages = chatData.map((msg) {
+        final author = msg['author'] == 'user' ? _user : _doctor;
+        return types.TextMessage(
+          author: author,
+          createdAt: msg['createdAt'],
+          id: msg['id'],
+          text: msg['text'],
+        );
+      }).toList();
+    });
+
+    if (_messages.isEmpty) {
+      _addWelcomeMessage();
+    } else {
+      _updateMessages();
+    }
+  }
+
+  void _addWelcomeMessage() async {
     final msg = types.TextMessage(
       author: _doctor,
       createdAt: DateTime.now().millisecondsSinceEpoch,
@@ -46,6 +69,13 @@ class _ChatPageState extends State<ChatPage> {
 
     _messages.insert(0, msg);
     _updateMessages();
+    await DBChatHelper.insertMessage(
+      widget.doctorName,
+      msg.id,
+      msg.text,
+      'doctor',
+      msg.createdAt!,
+    );
   }
 
   void _updateMessages() {
@@ -53,7 +83,6 @@ class _ChatPageState extends State<ChatPage> {
       _messageController.add(List.from(_messages));
     }
 
-    // Scroll ke atas biar pesan baru kelihatan
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
@@ -65,7 +94,7 @@ class _ChatPageState extends State<ChatPage> {
     });
   }
 
-  void _handleSendPressed(types.PartialText message) {
+  void _handleSendPressed(types.PartialText message) async {
     final textMessage = types.TextMessage(
       author: _user,
       createdAt: DateTime.now().millisecondsSinceEpoch,
@@ -76,6 +105,15 @@ class _ChatPageState extends State<ChatPage> {
     _messages.insert(0, textMessage);
     _updateMessages();
 
+    // DB
+    await DBChatHelper.insertMessage(
+      widget.doctorName,
+      textMessage.id,
+      textMessage.text,
+      'user',
+      textMessage.createdAt!,
+    );
+
     _simulateDoctorReply(message.text);
   }
 
@@ -84,7 +122,6 @@ class _ChatPageState extends State<ChatPage> {
       _isTyping = true;
     });
 
-    // Delay mengetik tergantung panjang pesan user
     final typingDelay = Duration(milliseconds: 1500 + userText.length * 50);
     await Future.delayed(typingDelay);
 
@@ -97,6 +134,14 @@ class _ChatPageState extends State<ChatPage> {
 
     _messages.insert(0, reply);
     _updateMessages();
+    
+    await DBChatHelper.insertMessage(
+      widget.doctorName,
+      reply.id,
+      reply.text,
+      'doctor',
+      reply.createdAt!,
+    );
 
     setState(() {
       _isTyping = false;
@@ -184,10 +229,8 @@ class _ChatPageState extends State<ChatPage> {
                 children: [
                   const SizedBox(width: 16),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
                       color: Colors.grey.shade200,
                       borderRadius: BorderRadius.circular(12),

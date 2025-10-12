@@ -4,7 +4,7 @@ import 'package:project/forgot_password.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'ProfilPage.dart';
 import 'sign_up.dart';
-import 'database_auth/db_helper.dart';
+import 'database/db_helper.dart';
 
 class SignIn extends StatefulWidget {
   const SignIn({super.key});
@@ -26,17 +26,14 @@ class _SignInState extends State<SignIn> {
       return;
     }
 
-    // ✅ Cari user di database dengan email/username + password
     final user = await DBHelper.getUser(inputEmailOrUsername, inputPassword);
 
     if (user != null) {
-      // ✅ Simpan status login ke SharedPreferences
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('isLoggedIn', true);
       await prefs.setString('loggedInEmail', user['email']);
       await prefs.setString('loggedInName', user['name']);
 
-      // ✅ Arahkan ke ProfilePage
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const ProfilePage()),

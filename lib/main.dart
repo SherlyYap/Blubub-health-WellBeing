@@ -21,6 +21,7 @@ Future<void> main() async {
           ChangeNotifierProvider(create: (_) => ShopProvider()),
           ChangeNotifierProvider(create: (_) => ThemeProvider()),
           ChangeNotifierProvider(create: (_) => FavoriteProvider()),
+          ChangeNotifierProvider(create: (_) => ShopProvider()..loadBahanFromDb()),
         ],
         child: const MyApp(),
       ),
