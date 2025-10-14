@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:project/database/db_bahan_helper.dart'; // ✅ gunakan ini
+import 'package:project/database/db_bahan_helper.dart';
 import 'package:project/health_food/shop/data_bahan.dart';
 
 class Bahan {
@@ -62,21 +62,37 @@ class ShopProvider extends ChangeNotifier {
   int totalHarga() =>
       _keranjang.fold(0, (total, item) => total + item.harga * item.jumlah);
 
-  /// 🔹 Load bahan dari DB (jika kosong isi default)
+  /// ✅ Load bahan dari DB, tanpa insert double
   Future<void> loadBahanFromDb() async {
-    final dbData = await BahanDBHelper.getAllBahan(); // ✅ pakai BahanDBHelper
+    final dbData = await BahanDBHelper.getAllBahan();
+
     if (dbData.isEmpty) {
+      // Hanya insert satu kali saat DB benar-benar kosong
       for (var bahan in semuaBahanList) {
         await BahanDBHelper.insertBahan(bahan.toMap());
       }
       semuaBahan = semuaBahanList;
     } else {
       semuaBahan = dbData.map((e) => Bahan.fromMap(e)).toList();
+
+      // Tambahkan hanya bahan baru dari data_bahan.dart yang belum ada di DB
+      for (var bahan in semuaBahanList) {
+        final exists = semuaBahan.any((b) => b.nama == bahan.nama);
+        if (!exists) {
+          await BahanDBHelper.insertBahan(bahan.toMap());
+          semuaBahan.add(bahan);
+        }
+      }
     }
+
+    // Pastikan tidak ada duplikat di list memori juga
+    final seen = <String>{};
+    semuaBahan = semuaBahan.where((b) => seen.add(b.nama)).toList();
+
     notifyListeners();
   }
 
-  /// 🔹 Filter berdasarkan kategori, switch, dan pencarian
+  /// 🔹 Filter kategori, switch & pencarian
   List<Bahan> get filteredItems {
     return semuaBahan.where((bahan) {
       final cocokKategori =
@@ -149,7 +165,7 @@ class ShopProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// 🔹 Checkout dan simpan ke riwayat
+  /// 🔹 Checkout & simpan ke history
   Future<void> checkout(String metodePembayaran) async {
     if (_keranjang.isEmpty) return;
 
@@ -157,7 +173,7 @@ class ShopProvider extends ChangeNotifier {
       final index = semuaBahan.indexWhere((b) => b.nama == item.nama);
       if (index != -1) {
         semuaBahan[index].jumlahPembelian += item.jumlah;
-        await BahanDBHelper.updateBahan(semuaBahan[index].toMap()); // ✅
+        await BahanDBHelper.updateBahan(semuaBahan[index].toMap());
       }
     }
 
@@ -172,7 +188,7 @@ class ShopProvider extends ChangeNotifier {
       }).toList(),
     );
 
-    await BahanDBHelper.insertPurchaseHistory( // ✅
+    await BahanDBHelper.insertPurchaseHistory(
       itemsJson,
       totalHarga(),
       metodePembayaran,
@@ -182,12 +198,12 @@ class ShopProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ================= HISTORY ==================
+  /// 🔹 Load riwayat pembelian
   List<Map<String, dynamic>> _historyList = [];
   List<Map<String, dynamic>> get historyList => _historyList;
 
   Future<void> loadHistory() async {
-    final data = await BahanDBHelper.getPurchaseHistory(); // ✅
+    final data = await BahanDBHelper.getPurchaseHistory();
     _historyList = data;
     notifyListeners();
   }
