@@ -5,8 +5,32 @@ import 'package:project/artikel.dart';
 import 'package:project/main_page.dart';
 import 'package:project/consultation/notification_data.dart';
 
-class NotificationsPage extends StatelessWidget {
+class NotificationsPage extends StatefulWidget {
   const NotificationsPage({super.key});
+
+  @override
+  State<NotificationsPage> createState() => _NotificationsPageState();
+}
+
+class _NotificationsPageState extends State<NotificationsPage> {
+  @override
+  void initState() {
+    super.initState();
+    loadNotifications().then((_) {
+      setState(() {});
+    });
+  }
+
+  Future<void> _clearAllNotifications() async {
+    await clearNotifications();
+    setState(() {});
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Semua notifikasi telah dihapus'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,71 +42,60 @@ class NotificationsPage extends StatelessWidget {
         child: Column(
           children: [
             const SizedBox(height: 20),
-            Text(
-              'Notifications',
-              style: GoogleFonts.nunito(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[900],
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const SizedBox(width: 16),
+                Text(
+                  'Notifications',
+                  style: GoogleFonts.nunito(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[900],
+                  ),
+                ),
+                // 🟩 Chip untuk menghapus semua notifikasi
+                Padding(
+                  padding: const EdgeInsets.only(right: 16),
+                  child: ActionChip(
+                    label: Text(
+                      "Hapus Semua",
+                      style: GoogleFonts.nunito(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    backgroundColor: const Color(0xff0D273D),
+                    onPressed: _clearAllNotifications,
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 20),
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                children: [
-                  for (var notif in customNotifications)
-                    NotificationCard(
-                      emoji: notif['emoji'] ?? '🔔',
-                      title: notif['title'] ?? '',
-                      time: notif['time'] ?? '',
-                      description: notif['description'] ?? '',
-                      action1: notif['action1'] ?? '',
+              child: customNotifications.isEmpty
+                  ? Center(
+                      child: Text(
+                        'Tidak ada notifikasi',
+                        style: GoogleFonts.nunito(
+                          color: Colors.grey[700],
+                          fontSize: 16,
+                        ),
+                      ),
+                    )
+                  : ListView(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      children: [
+                        for (var notif in customNotifications)
+                          NotificationCard(
+                            emoji: notif['emoji'] ?? '🔔',
+                            title: notif['title'] ?? '',
+                            time: notif['time'] ?? '',
+                            description: notif['message'] ?? '',
+                            action1: "Lihat Detail",
+                          ),
+                      ],
                     ),
-                  const NotificationCard(
-                    emoji: "🟢",
-                    title: "Reminder!",
-                    time: "23 min",
-                    description:
-                        "Doctor appointment today at 6:30pm, need to pick up files on the way.",
-                    action1: "Mark as done",
-                    action2: "Update",
-                  ),
-                  const NotificationCard(
-                    emoji: "❤️",
-                    title: "Your weekly health tip is ready!",
-                    time: "2 hr",
-                    description:
-                        "We've prepared your weekly health tip to help you improve your mood.",
-                    action1: "Open weekly tips",
-                  ),
-                  const NotificationCard(
-                    emoji: "⚖️",
-                    title: "It’s time to enter your weight",
-                    time: "1 d",
-                    description:
-                        "Track your weight and help us customize your weekly health tip for you.",
-                    action1: "Add weight entry",
-                  ),
-                  const NotificationCard(
-                    emoji: "📅",
-                    title: "Moment remainder!",
-                    time: "1 wk",
-                    description:
-                        "Doctor appointment today at 6:30pm, need to pick up files on the way.",
-                    action1: "View",
-                    action2: "Update",
-                  ),
-                  const NotificationCard(
-                    emoji: "⚖️",
-                    title: "It’s time to enter your weight",
-                    time: "1 yr",
-                    description:
-                        "We’ve prepared your weekly health tip to help you improve your mood.",
-                    action1: "Add weight entry",
-                  ),
-                ],
-              ),
             ),
           ],
         ),
