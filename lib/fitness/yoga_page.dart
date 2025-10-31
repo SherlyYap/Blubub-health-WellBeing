@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class YogaPage extends StatefulWidget {
   const YogaPage({super.key});
@@ -13,182 +15,61 @@ class YogaPage extends StatefulWidget {
 class _YogaPageState extends State<YogaPage> {
   String searchQuery = '';
   String selectedCategory = 'All';
-
   DateTime? globalYogaSchedule;
+  List<dynamic> yogaList = [];
+  bool isLoading = true;
 
-  final List<Map<String, String>> yogaList = [
-    {
-      'name': 'Chaturanga',
-      'image': 'img-project/chaturanga.jpg',
-      'desc':
-          'Dari posisi plank, turunkan tubuh ke bawah dengan siku menempel di sisi tubuh.',
-      'category': 'Strength',
-    },
-    {
-      'name': 'Downward facing Dog',
-      'image': 'img-project/downward_dog.jpg',
-      'desc':
-          'Posisikan tubuh seperti segitiga terbalik, kaki dan tangan menempel di lantai.',
-      'category': 'Stretching',
-    },
-    {
-      'name': 'Warrior II',
-      'image': 'img-project/warrior_2.jpg',
-      'desc':
-          'Posisikan tubuh dengan satu kaki di depan dan satu kaki di belakang, tangan terbuka lebar.',
-      'category': 'Strength',
-    },
-    {
-      'name': 'Lotus Pose',
-      'image': 'img-project/lotus_pose.jpg',
-      'desc':
-          'Duduk bersila dengan telapak kaki menghadap ke atas dan tangan di pangkuan.',
-      'category': 'Stretching',
-    },
-    {
-      'name': 'Cobra Pose',
-      'image': 'img-project/cobra_pose.jpg',
-      'desc': 'Berbaring telungkup, angkat dada dan kepala dengan tangan.',
-      'category': 'Stretching',
-    },
-    {
-      'name': 'Bridge Pose',
-      'image': 'img-project/bridge_pose.jpg',
-      'desc': 'Berbaring telentang, angkat pinggul ke atas.',
-      'category': 'Strength',
-    },
-    {
-      'name': 'Child Pose',
-      'image': 'img-project/child_pose.jpg',
-      'desc':
-          'Duduk di atas tumit, tekuk tubuh ke depan dengan tangan lurus ke depan.',
-      'category': 'Stretching',
-    },
-    {
-      'name': 'Tree Pose',
-      'image': 'img-project/tree_pose.jpg',
-      'desc': 'Satu kaki di paha dalam, tangan di atas kepala.',
-      'category': 'Balance',
-    },
-    {
-      'name': 'Warrior I',
-      'image': 'img-project/warrior_1.jpg',
-      'desc':
-          'Posisikan tubuh dengan satu kaki di depan dan satu kaki di belakang, tangan di atas kepala.',
-      'category': 'Strength',
-    },
-    {
-      'name': 'Triangle Pose',
-      'image': 'img-project/triangle_pose.jpg',
-      'desc':
-          'Satu kaki di depan, satu kaki di belakang, tangan terbuka lebar.',
-      'category': 'Stretching',
-    },
-    {
-      'name': 'Plank Pose',
-      'image': 'img-project/plank_pose.jpg',
-      'desc': 'Posisi tubuh seperti papan, tangan dan kaki menempel di lantai.',
-      'category': 'Strength',
-    },
-    {
-      'name': 'Cow Pose',
-      'image': 'img-project/cow_pose.jpg',
-      'desc': 'Posisi merangkak, gerakan punggung ke bawah.',
-      'category': 'Warm Up',
-    },
-    {
-      'name': 'Seated Forward Bend',
-      'image': 'img-project/seated_forward_bend.jpg',
-      'desc': 'Duduk dengan kaki lurus, tekuk tubuh ke depan.',
-      'category': 'Stretching',
-    },
-    {
-      'name': 'Pigeon Pose',
-      'image': 'img-project/pigeon_pose.jpg',
-      'desc':
-          'Satu kaki di depan, satu kaki di belakang, tubuh condong ke depan.',
-      'category': 'Stretching',
-    },
-    {
-      'name': 'Boat Pose',
-      'image': 'img-project/boat_pose.jpg',
-      'desc': 'Duduk dengan kaki diangkat, tubuh membentuk huruf V.',
-      'category': 'Strength',
-    },
-    {
-      'name': 'Happy Baby Pose',
-      'image': 'img-project/happybaby_pose.jpg',
-      'desc': 'Berbaring telentang, angkat kaki dan pegang telapak kaki.',
-      'category': 'Stretching',
-    },
-    {
-      'name': 'Corpse Pose',
-      'image': 'img-project/corpse_pose.jpg',
-      'desc': 'Berbaring telentang, rilekskan seluruh tubuh.',
-      'category': 'Stretching',
-    },
-    {
-      'name': 'Side Plank',
-      'image': 'img-project/side_plank.jpg',
-      'desc':
-          'Posisi tubuh miring, satu tangan dan satu kaki menempel di lantai.',
-      'category': 'Strength',
-    },
-    {
-      'name': 'Eagle Pose',
-      'image': 'img-project/eagle_pose.jpg',
-      'desc':
-          'Satu kaki di depan, satu kaki di belakang, tangan saling melilit.',
-      'category': 'Balance',
-    },
-    {
-      'name': 'Fish Pose',
-      'image': 'img-project/fish_pose.jpg',
-      'desc': 'Berbaring telentang, angkat dada dan kepala.',
-      'category': 'Stretching',
-    },
-    {
-      'name': 'Table top pose',
-      'image': 'img-project/table_top.jpg',
-      'desc': 'Posisi merangkak, perut tubuh lurus seperti meja.',
-      'category': 'Warm Up',
-    },
-    {
-      'name': 'seated twist right side',
-      'image': 'img-project/s_t_r.jpg',
-      'desc':
-          'Duduk dengan kaki kanan di silangkan ke kiri, kaki kiri di tekuk dan diposisikan di kanan , tubuh berputar ke kanan.',
-      'category': 'Warm Up',
-    },
-    {
-      'name': 'cat pose',
-      'image': 'img-project/cat_pose.jpg',
-      'desc': 'Posisi merangkak, gerakan punggung ke atas.',
-      'category': 'Warm Up',
-    },
-    {
-      'name': 'seated twist left side',
-      'image': 'img-project/s_t_l.jpg',
-      'desc':
-          'Duduk dengan kaki kiri di silangkan ke kanan, kaki kanan di tekuk dan diposisikan di kiri , tubuh berputar ke kiri.',
-      'category': 'Warm Up',
-    },
-    {
-      'name': 'half moon pose',
-      'image': 'img-project/half_moon_pose.jpg',
-      'desc':
-          'Posisi berdiri dengan satu kaki di depan, satu kaki di belakang, tubuh condong ke samping.',
-      'category': 'Balance',
-    },
-  ];
+  final List<String> categories = ['All', 'Beginner', 'Intermediate', 'Expert'];
 
-  final List<String> categories = [
-    'All',
-    'Warm Up',
-    'Strength',
-    'Stretching',
-    'Balance',
-  ];
+  @override
+  void initState() {
+    super.initState();
+    loadYogaSchedule();
+    fetchYogaData(); 
+  }
+
+  Future<void> fetchYogaData({String? level}) async {
+    setState(() {
+      isLoading = true;
+    });
+
+    String url = 'https://yoga-api-nzy4.onrender.com/v1/poses';
+    if (level != null && level.toLowerCase() != 'all') {
+      url = 'https://yoga-api-nzy4.onrender.com/v1/poses?level=${level.toLowerCase()}';
+    }
+
+    try {
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        List<dynamic> flatList = [];
+        if (data is List) {
+          for (var el in data) {
+            if (el is Map && el.containsKey('poses') && el['poses'] is List) {
+              flatList.addAll(el['poses']);
+            } else {
+              flatList.add(el);
+            }
+          }
+        } else if (data is Map && data.containsKey('poses')) {
+          flatList = data['poses'];
+        }
+
+        setState(() {
+          yogaList = flatList;
+          isLoading = false;
+        });
+      } else {
+        throw Exception('Failed to load yoga poses');
+      }
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+      debugPrint("Error fetching yoga data: $e");
+    }
+  }
+
   Future<void> saveYogaSchedule(DateTime dateTime) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('yoga_schedule', dateTime.toIso8601String());
@@ -204,40 +85,32 @@ class _YogaPageState extends State<YogaPage> {
     }
   }
 
-  List<Map<String, String>> get filteredList {
-    return yogaList.where((pose) {
-      final matchCategory =
-          selectedCategory == 'All' || pose['category'] == selectedCategory;
-      final matchSearch = pose['name']!.toLowerCase().contains(
-        searchQuery.toLowerCase(),
-      );
-      return matchCategory && matchSearch;
-    }).toList();
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    loadYogaSchedule();
+  List<dynamic> get filteredList {
+    if (searchQuery.isEmpty) return yogaList;
+    return yogaList
+        .where((pose) =>
+            (pose['english_name'] ?? '')
+                .toString()
+                .toLowerCase()
+                .contains(searchQuery.toLowerCase()) ||
+            (pose['sanskrit_name_adapted'] ?? '')
+                .toString()
+                .toLowerCase()
+                .contains(searchQuery.toLowerCase()))
+        .toList();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(width: 8),
-            Text(
-              'Yoga',
-              style: GoogleFonts.nunito(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
-            ),
-          ],
+        title: Text(
+          'Yoga',
+          style: GoogleFonts.nunito(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
         ),
         backgroundColor: const Color.fromARGB(255, 202, 231, 255),
         leading: IconButton(
@@ -255,15 +128,9 @@ class _YogaPageState extends State<YogaPage> {
                 child: TextField(
                   decoration: InputDecoration(
                     hintText: 'Cari gerakan yoga...',
-                    hintStyle: GoogleFonts.nunito(),
                     prefixIcon: const Icon(Icons.search),
                     filled: true,
-                    fillColor: const Color.fromARGB(
-                      255,
-                      255,
-                      255,
-                      255,
-                    ).withOpacity(0.9),
+                    fillColor: Colors.white.withOpacity(0.9),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -275,35 +142,37 @@ class _YogaPageState extends State<YogaPage> {
                   },
                 ),
               ),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
+              Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Row(
-                  children:
-                      categories.map((category) {
-                        final isSelected = category == selectedCategory;
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                          child: ChoiceChip(
-                            label: Text(category),
-                            selected: isSelected,
-                            onSelected: (_) {
-                              setState(() {
-                                selectedCategory = category;
-                              });
-                            },
-                            selectedColor: const Color(0xff0D273D),
-                            backgroundColor: Colors.white70,
-                            labelStyle: GoogleFonts.nunito(
-                              color: isSelected ? Colors.white : Colors.black,
-                            ),
-                          ),
-                        );
-                      }).toList(),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.9),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: DropdownButton<String>(
+                    isExpanded: true,
+                    value: selectedCategory,
+                    underline: const SizedBox(),
+                    items: categories.map((String category) {
+                      return DropdownMenuItem<String>(
+                        value: category,
+                        child: Text(category),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) {
+                      if (newValue != null) {
+                        setState(() {
+                          selectedCategory = newValue;
+                        });
+                        fetchYogaData(level: newValue);
+                      }
+                    },
+                  ),
                 ),
               ),
-              const SizedBox(height: 10),
 
+              const SizedBox(height: 10),
               Padding(
                 padding: const EdgeInsets.only(left: 12, top: 8),
                 child: GestureDetector(
@@ -341,15 +210,12 @@ class _YogaPageState extends State<YogaPage> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
-                        Icons.date_range,
-                        color: Color.fromARGB(255, 0, 0, 0),
-                      ),
-                      SizedBox(width: 6),
+                      const Icon(Icons.date_range, color: Colors.black),
+                      const SizedBox(width: 6),
                       Text(
                         'Atur Jadwal Yoga',
                         style: GoogleFonts.nunito(
-                          color: Color.fromARGB(255, 0, 0, 0),
+                          color: Colors.black,
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
@@ -365,61 +231,88 @@ class _YogaPageState extends State<YogaPage> {
                   child: Text(
                     'Jadwal Yoga: ${DateFormat('EEEE, dd MMMM yyyy – hh:mm a').format(globalYogaSchedule!)}',
                     style: GoogleFonts.nunito(
-                      color: Color.fromARGB(255, 0, 0, 0),
+                      color: Colors.black,
                       fontStyle: FontStyle.italic,
                     ),
                   ),
                 ),
-
               Expanded(
-                child: ListView.builder(
-                  itemCount: filteredList.length,
-                  itemBuilder: (context, index) {
-                    final item = filteredList[index];
-                    return Card(
-                      margin: const EdgeInsets.all(12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 4,
-                      clipBehavior: Clip.antiAlias,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          AspectRatio(
-                            aspectRatio: 16 / 9,
-                            child: Image.asset(
-                              item['image']!,
-                              fit: BoxFit.cover,
+                child: isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : filteredList.isEmpty
+                        ? Center(
+                            child: Text(
+                              "Tidak ada pose ditemukan 😅",
+                              style: GoogleFonts.nunito(fontSize: 16),
                             ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  item['name']!,
-                                  style: GoogleFonts.nunito(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color.fromARGB(255, 0, 0, 0),
-                                  ),
+                          )
+                        : ListView.builder(
+                            itemCount: filteredList.length,
+                            itemBuilder: (context, index) {
+                              final item = filteredList[index];
+                              return Card(
+                                margin: const EdgeInsets.all(12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  item['desc']!,
-                                  style: GoogleFonts.nunito(),
+                                elevation: 4,
+                                clipBehavior: Clip.antiAlias,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    AspectRatio(
+                                      aspectRatio: 16 / 9,
+                                      child: Image.network(
+                                        item['url_png'] ??
+                                            item['url_svg'] ??
+                                            'https://via.placeholder.com/300',
+                                        fit: BoxFit.cover,
+                                        errorBuilder:
+                                            (context, error, stackTrace) {
+                                          return const Center(
+                                            child: Icon(
+                                              Icons.image_not_supported,
+                                              size: 40,
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.all(12),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            item['english_name'] ?? 'Unknown Pose',
+                                            style: GoogleFonts.nunito(
+                                              fontSize: 22,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.black,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 6),
+                                          Text(
+                                            'Level: ${item['difficulty_level'] ?? selectedCategory}',
+                                            style: GoogleFonts.nunito(
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 6),
+                                          Text(
+                                            item['pose_description'] ??
+                                                'Tidak ada deskripsi tersedia.',
+                                            style: GoogleFonts.nunito(),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(height: 12),
-                              ],
-                            ),
+                              );
+                            },
                           ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
               ),
             ],
           ),
