@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 class WorkoutSessionPage extends StatefulWidget {
   final String workoutName;
-  final String workoutImage;
+  final String workoutImage; // Sekarang bisa dari URL (gifUrl)
   final String workoutDescription;
   final int duration;
 
@@ -49,13 +49,16 @@ class _WorkoutSessionPageState extends State<WorkoutSessionPage> {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title:  Text("Selesai!", style: GoogleFonts.nunito()),
-        content: Text("Latihan telah selesai. Bagus! 💪", style: GoogleFonts.nunito(),),
+        title: Text("Selesai!", style: GoogleFonts.nunito()),
+        content: Text(
+          "Latihan telah selesai. Bagus banget! 💪",
+          style: GoogleFonts.nunito(),
+        ),
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.of(context).pop(); 
-              Navigator.of(context).pop(); 
+              Navigator.of(context).pop();
+              Navigator.of(context).pop();
             },
             child: Text("Kembali", style: GoogleFonts.nunito()),
           ),
@@ -90,25 +93,62 @@ class _WorkoutSessionPageState extends State<WorkoutSessionPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            // ✅ Ganti dari Image.asset() jadi Image.network()
             ClipRRect(
               borderRadius: BorderRadius.circular(20),
-              child: Image.asset(widget.workoutImage, height: 200, fit: BoxFit.cover),
+              child: Image.network(
+                widget.workoutImage,
+                height: 250,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                // Jika gagal load gambar, tampilkan ikon pengganti
+                errorBuilder: (context, error, stackTrace) => Container(
+                  height: 200,
+                  color: Colors.grey[300],
+                  alignment: Alignment.center,
+                  child: const Icon(Icons.broken_image, size: 80, color: Colors.grey),
+                ),
+                // Bisa juga ditambah loading spinner
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Container(
+                    height: 200,
+                    alignment: Alignment.center,
+                    child: const CircularProgressIndicator(color: Color(0xff0D273D)),
+                  );
+                },
+              ),
             ),
+
             const SizedBox(height: 20),
+
             Text(
               widget.workoutName,
               textAlign: TextAlign.center,
-              style: GoogleFonts.nunito(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black87),
+              style: GoogleFonts.nunito(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
             ),
+
             const SizedBox(height: 10),
+
             Text(
               widget.workoutDescription,
               textAlign: TextAlign.center,
               style: GoogleFonts.nunito(fontSize: 16, color: Colors.black54),
             ),
+
             const SizedBox(height: 30),
-            Text("Waktu Tersisa:", style: GoogleFonts.nunito(fontSize: 20, fontWeight: FontWeight.w500)),
+
+            Text(
+              "Waktu Tersisa:",
+              style: GoogleFonts.nunito(fontSize: 20, fontWeight: FontWeight.w500),
+            ),
             const SizedBox(height: 10),
+
+            // ✅ Countdown Timer
             Container(
               width: 150,
               height: 150,
@@ -119,19 +159,25 @@ class _WorkoutSessionPageState extends State<WorkoutSessionPage> {
               alignment: Alignment.center,
               child: Text(
                 _formatTime(_remainingSeconds),
-                style: GoogleFonts.nunito(fontSize: 36, fontWeight: FontWeight.bold, color: Color.fromARGB(255, 202, 231, 255)),
+                style: GoogleFonts.nunito(
+                  fontSize: 36,
+                  fontWeight: FontWeight.bold,
+                  color: const Color.fromARGB(255, 202, 231, 255),
+                ),
               ),
             ),
+
             const SizedBox(height: 30),
+
             ElevatedButton.icon(
               onPressed: () {
                 _timer?.cancel();
                 Navigator.pop(context);
               },
               icon: const Icon(Icons.stop_circle, size: 28),
-              label:Text("Akhiri Latihan", style: GoogleFonts.nunito(fontSize: 18)),
+              label: Text("Akhiri Latihan", style: GoogleFonts.nunito(fontSize: 18)),
               style: ElevatedButton.styleFrom(
-                backgroundColor:const Color(0xff0D273D),
+                backgroundColor: const Color(0xff0D273D),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
