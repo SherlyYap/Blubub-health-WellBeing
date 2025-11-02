@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "647330183385",
+    "project_id": "blubub-health-wellbeing",
+    "storage_bucket": "blubub-health-wellbeing.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:647330183385:android:2594aea84936fd369e66c8",
+        "android_client_info": {
+          "package_name": "com.example.study1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyArFirF1b3fIGyZsOKI0rf6a18pKGeTa3Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -7,6 +7,8 @@
 // ignore_for_file: type=lint
 
 import 'package:audio_session/audio_session_web.dart';
+import 'package:firebase_analytics_web/firebase_analytics_web.dart';
+import 'package:firebase_core_web/firebase_core_web.dart';
 import 'package:image_picker_for_web/image_picker_for_web.dart';
 import 'package:just_audio_web/just_audio_web.dart';
 import 'package:share_plus/src/share_plus_web.dart';
@@ -17,6 +19,8 @@ import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 void registerPlugins([final Registrar? pluginRegistrar]) {
   final Registrar registrar = pluginRegistrar ?? webPluginRegistrar;
   AudioSessionWeb.registerWith(registrar);
+  FirebaseAnalyticsWeb.registerWith(registrar);
+  FirebaseCoreWeb.registerWith(registrar);
   ImagePickerPlugin.registerWith(registrar);
   JustAudioPlugin.registerWith(registrar);
   SharePlusWebPlugin.registerWith(registrar);
