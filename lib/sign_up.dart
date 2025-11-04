@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:project/database/db_helper.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'sign_in.dart';
 
 class SignUp extends StatefulWidget {
@@ -11,10 +11,13 @@ class SignUp extends StatefulWidget {
 }
 
 class _SignUpState extends State<SignUp> {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
 
   bool _isLoading = false;
 
@@ -25,8 +28,8 @@ class _SignUpState extends State<SignUp> {
   Future<void> _handleSignUp() async {
     String name = nameController.text.trim();
     String email = emailController.text.trim();
-    String password = passwordController.text;
-    String confirmPassword = confirmPasswordController.text;
+    String password = passwordController.text.trim();
+    String confirmPassword = confirmPasswordController.text.trim();
 
     if (name.isEmpty || email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
       _showSnackbar("Semua field harus diisi!");
@@ -48,44 +51,34 @@ class _SignUpState extends State<SignUp> {
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
-      await DBHelper.insertUser(name, email, password);
+      await _auth.createUserWithEmailAndPassword(email: email, password: password);
+      await _auth.currentUser?.updateDisplayName(name);
 
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-
-        _showSnackbar("Pendaftaran berhasil!");
-
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const SignIn()),
-        );
-      }
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      _showSnackbar("Gagal daftar: ${e.toString()}");
+      _showSnackbar("Pendaftaran berhasil!");
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const SignIn()),
+      );
+    } on FirebaseAuthException catch (e) {
+      _showSnackbar(e.message ?? "Terjadi kesalahan saat mendaftar");
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   void _showSnackbar(String message) {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: const Color(0XFF031716),
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.all(16),
-        ),
-      );
-    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: const Color(0XFF031716),
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+      ),
+    );
   }
 
   Widget _buildTextField({
@@ -104,10 +97,8 @@ class _SignUpState extends State<SignUp> {
       decoration: InputDecoration(
         prefixIcon: Icon(icon),
         hintText: hint,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 20,
-          vertical: 16,
-        ),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         filled: true,
         fillColor: Colors.white,
         border: const UnderlineInputBorder(),
@@ -136,14 +127,10 @@ class _SignUpState extends State<SignUp> {
             top: 40,
             left: 0,
             right: 0,
-            child: Column(
-              children: [
-                Image.asset(
-                  'img-project/logo.png',
-                  width: 300,
-                  height: 300,
-                ),
-              ],
+            child: Image.asset(
+              'img-project/logo.png',
+              width: 300,
+              height: 300,
             ),
           ),
           Positioned(
@@ -194,7 +181,8 @@ class _SignUpState extends State<SignUp> {
                     ElevatedButton(
                       onPressed: _handleSignUp,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color.fromARGB(255, 202, 231, 255),
+                        backgroundColor:
+                            const Color.fromARGB(255, 202, 231, 255),
                         foregroundColor: Colors.black,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 80,
@@ -225,7 +213,8 @@ class _SignUpState extends State<SignUp> {
                           onTap: () {
                             Navigator.pushReplacement(
                               context,
-                              MaterialPageRoute(builder: (_) => const SignIn()),
+                              MaterialPageRoute(
+                                  builder: (_) => const SignIn()),
                             );
                           },
                           child: Text(

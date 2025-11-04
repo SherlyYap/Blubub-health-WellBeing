@@ -10,20 +10,13 @@ import 'package:project/provider/favorite_provider.dart';
 import 'package:project/navigation_service.dart';
 import 'package:project/consultation/notification_data.dart'; 
 
-// ✅ Tambahkan instance global untuk Analytics
 final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-
-  // ✅ Set durasi timeout session (contoh: 30 menit)
   await analytics.setSessionTimeoutDuration(const Duration(minutes: 30));
-
-  // ✅ (opsional) kirim event bahwa aplikasi baru dibuka
   await analytics.logEvent(name: 'app_started');
-
-  // ✅ Load notifikasi dari SharedPreferences sebelum runApp
   await loadNotifications();
 
   runApp(

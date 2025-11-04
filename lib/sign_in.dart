@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:project/forgot_password.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'ProfilPage.dart';
 import 'sign_up.dart';
-import 'database/db_helper.dart';
+import 'forgot_password.dart';
 
 class SignIn extends StatefulWidget {
   const SignIn({super.key});
@@ -14,32 +14,39 @@ class SignIn extends StatefulWidget {
 }
 
 class _SignInState extends State<SignIn> {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  Future<void> _handleSignIn() async {
-    String inputEmailOrUsername = _emailController.text.trim();
-    String inputPassword = _passwordController.text;
+  bool _isLoading = false;
 
-    if (inputEmailOrUsername.isEmpty || inputPassword.isEmpty) {
+  Future<void> _handleSignIn() async {
+    String email = _emailController.text.trim();
+    String password = _passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
       _showSnackbar("Mohon isi semua field");
       return;
     }
 
-    final user = await DBHelper.getUser(inputEmailOrUsername, inputPassword);
+    setState(() => _isLoading = true);
 
-    if (user != null) {
+    try {
+      await _auth.signInWithEmailAndPassword(email: email, password: password);
+
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('isLoggedIn', true);
-      await prefs.setString('loggedInEmail', user['email']);
-      await prefs.setString('loggedInName', user['name']);
+      await prefs.setString('loggedInEmail', email);
 
+      if (!mounted) return;
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const ProfilePage()),
       );
-    } else {
-      _showSnackbar("Email/Username atau password salah");
+    } on FirebaseAuthException catch (e) {
+      _showSnackbar(e.message ?? "Terjadi kesalahan");
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -70,10 +77,8 @@ class _SignInState extends State<SignIn> {
       decoration: InputDecoration(
         prefixIcon: Icon(icon),
         hintText: hint,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 20,
-          vertical: 30,
-        ),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
         filled: true,
         fillColor: Colors.white,
         border: const UnderlineInputBorder(),
@@ -89,16 +94,12 @@ class _SignInState extends State<SignIn> {
         children: [
           Container(
             padding: const EdgeInsets.only(top: 60),
-            child: Column(
-              children: [
-                Image.asset('img-project/logo.png', width: 300, height: 300),
-                const SizedBox(height: 12),
-              ],
-            ),
+            child: Image.asset('img-project/logo.png', width: 300, height: 300),
           ),
           Expanded(
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
               decoration: const BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.only(
@@ -110,7 +111,7 @@ class _SignInState extends State<SignIn> {
                 child: Column(
                   children: [
                     _buildTextField(
-                      hint: "enter your email or username",
+                      hint: "enter your email",
                       icon: Icons.email,
                       controller: _emailController,
                       inputAction: TextInputAction.next,
@@ -132,8 +133,7 @@ class _SignInState extends State<SignIn> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => const ForgotPasswordPage(),
-                            ),
+                                builder: (_) => const ForgotPasswordPage()),
                           );
                         },
                         child: Text(
@@ -146,33 +146,31 @@ class _SignInState extends State<SignIn> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: _handleSignIn,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color.fromARGB(
-                          255,
-                          202,
-                          231,
-                          255,
-                        ),
-                        foregroundColor: Colors.black,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 80,
-                          vertical: 16,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          side: const BorderSide(color: Colors.black),
-                        ),
-                      ),
-                      child: Text(
-                        "SIGN IN",
-                        style: GoogleFonts.nunito(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
+                    _isLoading
+                        ? const CircularProgressIndicator()
+                        : ElevatedButton(
+                            onPressed: _handleSignIn,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor:
+                                  const Color.fromARGB(255, 202, 231, 255),
+                              foregroundColor: Colors.black,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 80,
+                                vertical: 16,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                side: const BorderSide(color: Colors.black),
+                              ),
+                            ),
+                            child: Text(
+                              "SIGN IN",
+                              style: GoogleFonts.nunito(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
                     const SizedBox(height: 24),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -185,7 +183,8 @@ class _SignInState extends State<SignIn> {
                           onTap: () {
                             Navigator.pushReplacement(
                               context,
-                              MaterialPageRoute(builder: (_) => const SignUp()),
+                              MaterialPageRoute(
+                                  builder: (_) => const SignUp()),
                             );
                           },
                           child: Text(
