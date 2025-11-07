@@ -238,7 +238,7 @@ class _FitnessHomePageState extends State<FitnessHomePage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => const SubscriptionPage(),
+                        builder: (_) => const SubscriptionInfoPage(),
                       ),
                     ).then((_) => setState(() {}));
                   },
@@ -431,7 +431,7 @@ class _FitnessHomePageState extends State<FitnessHomePage> {
           _drawerItem(
             Icons.subscriptions,
             'Subscription',
-            const SubscriptionPage(),
+            const SubscriptionInfoPage(),
           ),
         ],
       ),
