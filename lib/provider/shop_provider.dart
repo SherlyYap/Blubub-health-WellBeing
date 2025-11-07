@@ -165,6 +165,15 @@ class ShopProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// 🔹 Alias agar kompatibel dengan UI yang memanggil kurangiJumlah()
+  void kurangiJumlah(Bahan bahan) => kurangJumlah(bahan);
+
+  /// 🔹 Hapus semua item di keranjang
+  void clearKeranjang() {
+    _keranjang.clear();
+    notifyListeners();
+  }
+
   /// 🔹 Checkout & simpan ke history
   Future<void> checkout(String metodePembayaran) async {
     if (_keranjang.isEmpty) return;

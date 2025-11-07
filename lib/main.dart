@@ -1,22 +1,30 @@
+import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
-import 'package:flutter/material.dart';
-import 'package:project/provider/shop_provider.dart';
-import 'provider/theme_provider.dart';
-import 'package:provider/provider.dart';
-import 'onboarding.dart';
+import 'package:firebase_analytics/observer.dart';
 import 'package:overlay_support/overlay_support.dart';
+import 'package:provider/provider.dart';
+import 'package:project/provider/shop_provider.dart';
+import 'package:project/provider/theme_provider.dart';
 import 'package:project/provider/favorite_provider.dart';
 import 'package:project/navigation_service.dart';
-import 'package:project/consultation/notification_data.dart'; 
+import 'package:project/consultation/notification_data.dart';
+import 'onboarding.dart';
 
+// ✅ Inisialisasi global Analytics
 final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
+final FirebaseAnalyticsObserver observer =
+    FirebaseAnalyticsObserver(analytics: analytics);
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+
+  // 🔹 Log event saat aplikasi dimulai
   await analytics.setSessionTimeoutDuration(const Duration(minutes: 30));
   await analytics.logEvent(name: 'app_started');
+
+  // 🔹 Muat notifikasi dari database lokal
   await loadNotifications();
 
   runApp(
@@ -43,6 +51,7 @@ class MyApp extends StatelessWidget {
 
     return MaterialApp(
       navigatorKey: navigatorKey,
+      navigatorObservers: [observer], // ✅ agar navigasi tercatat di Firebase
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         brightness: Brightness.light,
@@ -89,16 +98,22 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
+
+    // ✅ Catat event Splash Screen dibuka
+    analytics.logEvent(name: 'splash_screen_viewed');
+
     Future.delayed(const Duration(seconds: 2), () {
       Navigator.pushReplacement(
         context,
         PageRouteBuilder(
           transitionDuration: const Duration(milliseconds: 600),
-          pageBuilder: (context, animation, secondaryAnimation) => const OnboardingScreen(),
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              const OnboardingScreen(),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             const begin = Offset(1.0, 0.0);
             const end = Offset.zero;
-            final tween = Tween(begin: begin, end: end).chain(CurveTween(curve: Curves.easeInOut));
+            final tween = Tween(begin: begin, end: end)
+                .chain(CurveTween(curve: Curves.easeInOut));
             final offsetAnimation = animation.drive(tween);
             return SlideTransition(position: offsetAnimation, child: child);
           },
