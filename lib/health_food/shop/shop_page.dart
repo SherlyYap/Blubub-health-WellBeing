@@ -12,7 +12,7 @@ class ShopPage extends StatelessWidget {
     final provider = Provider.of<ShopProvider>(context, listen: false);
 
     return FutureBuilder(
-      future: provider.loadBahanFromDb(), // 🔹 Load data dari DB di awal
+      future: provider.loadBahanFromDb(), 
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(

@@ -34,12 +34,9 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     setState(() => _isLoading = true);
 
     try {
-      // Update password di SQLite berdasarkan email OR name
       final updated = await DBHelper.updatePassword(input, newPassword);
 
       if (updated > 0) {
-        // Jika berhasil update DB, periksa apakah user yang sedang login sama,
-        // jika iya update juga SharedPreferences agar session sinkron.
         final prefs = await SharedPreferences.getInstance();
         final loggedEmail = prefs.getString('loggedInEmail') ?? '';
         final loggedName = prefs.getString('loggedInName') ?? '';
@@ -51,7 +48,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         _showSnackbar("Password berhasil direset!");
         if (mounted) Navigator.pop(context);
       } else {
-        // Tidak ada baris yang diupdate -> user tidak ditemukan
         _showSnackbar("Akun tidak ditemukan (email/username salah).");
       }
     } catch (e) {

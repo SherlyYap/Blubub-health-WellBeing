@@ -103,8 +103,7 @@ class _ChatPageState extends State<ChatPage> {
 
     _messages.insert(0, textMessage);
     _updateMessages();
-
-    // DB
+    
     await DBChatHelper.insertMessage(
       widget.doctorName,
       textMessage.id,

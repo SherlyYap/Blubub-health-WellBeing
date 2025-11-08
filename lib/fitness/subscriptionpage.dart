@@ -6,7 +6,6 @@ import 'package:project/global.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-// Halaman sukses setelah melakukan pembelian
 class SubscriptionSuccessPage extends StatelessWidget {
   final String plan;
   final double price;
@@ -279,7 +278,6 @@ class _SubscriptionInfoPageState extends State<SubscriptionInfoPage> {
               ),
               ElevatedButton(
                 onPressed: () async {
-                  // Simpan data ke SharedPreferences
                   Schedule? schedule = await showScheduleDialog(context);
 
                   if (schedule != null && context.mounted) {
@@ -298,8 +296,6 @@ class _SubscriptionInfoPageState extends State<SubscriptionInfoPage> {
                     }
 
                     confirmedPlan = title;
-
-                    // Simpan data & log ke Firebase
                     await FirebaseAnalytics.instance.logPurchase(
                       currency: 'USD',
                       value: finalPrice,
@@ -324,7 +320,7 @@ class _SubscriptionInfoPageState extends State<SubscriptionInfoPage> {
                     await prefs.setString(
                         'endDate', confirmedEndDate.toString());
 
-                    Navigator.pop(context); //Tutup dialog confirm
+                    Navigator.pop(context); 
                     ScaffoldMessenger.of(ctx).showSnackBar(
                       SnackBar(
                         content: Text(
@@ -337,8 +333,6 @@ class _SubscriptionInfoPageState extends State<SubscriptionInfoPage> {
                         duration: const Duration(seconds: 3),
                       ),
                     );
-
-                    // Pindah ke halaman sukses
                     await Future.delayed(const Duration(seconds: 2));
                     if (ctx.mounted) {
                       Navigator.push(

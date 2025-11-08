@@ -55,8 +55,6 @@ class _HomeWorkoutPageState extends State<HomeWorkoutPage> {
       });
     }
   }
-
-  // Filter berdasarkan kategori & pencarian
   List<dynamic> get filteredWorkouts {
     final query = _searchController.text.toLowerCase();
 
@@ -66,8 +64,6 @@ class _HomeWorkoutPageState extends State<HomeWorkoutPage> {
           (w['targetMuscles'] != null && w['targetMuscles'].isNotEmpty)
               ? w['targetMuscles'][0].toString().toLowerCase()
               : '';
-
-      // Filter kategori manual berdasarkan target otot
       bool matchesCategory = true;
       if (_selectedCategory != "All") {
         if (_selectedCategory == "Strength") {
@@ -149,7 +145,6 @@ class _HomeWorkoutPageState extends State<HomeWorkoutPage> {
               const SizedBox(height: 20),
               ElevatedButton.icon(
                 onPressed: () async {
-                  // Catat event ke Firebase Analytics
                   await FirebaseAnalytics.instance.logEvent(
                     name: 'mulai_latihan',
                     parameters: {
@@ -163,8 +158,6 @@ class _HomeWorkoutPageState extends State<HomeWorkoutPage> {
                       'category': _selectedCategory,
                     },
                   );
-
-                  // Tutup bottom sheet & buka halaman sesi latihan
                   Navigator.pop(context);
                   Navigator.push(
                     context,

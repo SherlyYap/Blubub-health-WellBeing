@@ -424,7 +424,7 @@ class _CartPageState extends State<CartPage> {
                 translation: const Offset(
                   0,
                   -2.5,
-                ), // 🔧 posisi di atas total pembayaran
+                ), 
                 child: FloatingActionButton.extended(
                   onPressed: () {
                     Navigator.push(

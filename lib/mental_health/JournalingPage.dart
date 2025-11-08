@@ -21,7 +21,7 @@ class _JournalingPageState extends State<JournalingPage> {
 
   Future<void> _refreshJournals() async {
     try {
-      await _dbHelper.database; // pastikan database siap
+      await _dbHelper.database; 
       final data = await _dbHelper.getEntries();
       setState(() {
         _journals = data;
@@ -132,7 +132,7 @@ class _JournalingPageState extends State<JournalingPage> {
               };
 
               try {
-                await _dbHelper.database; // pastikan DB sudah siap
+                await _dbHelper.database; 
 
                 if (existingData == null) {
                   await _dbHelper.insertEntry(data);

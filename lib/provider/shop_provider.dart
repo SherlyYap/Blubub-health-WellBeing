@@ -61,21 +61,16 @@ class ShopProvider extends ChangeNotifier {
   int get totalKeranjang => _keranjang.length;
   int totalHarga() =>
       _keranjang.fold(0, (total, item) => total + item.harga * item.jumlah);
-
-  /// Load bahan dari DB, tanpa insert double
   Future<void> loadBahanFromDb() async {
     final dbData = await BahanDBHelper.getAllBahan();
 
     if (dbData.isEmpty) {
-      // Hanya insert satu kali saat DB benar-benar kosong
       for (var bahan in semuaBahanList) {
         await BahanDBHelper.insertBahan(bahan.toMap());
       }
       semuaBahan = semuaBahanList;
     } else {
       semuaBahan = dbData.map((e) => Bahan.fromMap(e)).toList();
-
-      // Tambahkan hanya bahan baru dari data_bahan.dart yang belum ada di DB
       for (var bahan in semuaBahanList) {
         final exists = semuaBahan.any((b) => b.nama == bahan.nama);
         if (!exists) {
@@ -84,15 +79,11 @@ class ShopProvider extends ChangeNotifier {
         }
       }
     }
-
-    // Pastikan tidak ada duplikat di list memori juga
     final seen = <String>{};
     semuaBahan = semuaBahan.where((b) => seen.add(b.nama)).toList();
 
     notifyListeners();
   }
-
-  /// 🔹 Filter kategori, switch & pencarian
   List<Bahan> get filteredItems {
     return semuaBahan.where((bahan) {
       final cocokKategori =
@@ -121,7 +112,6 @@ class ShopProvider extends ChangeNotifier {
     }
   }
 
-  /// 🔹 Tambah item ke keranjang
   void tambahKeKeranjang(Bahan bahan) {
     final index = _keranjang.indexWhere((item) => item.nama == bahan.nama);
     if (index != -1) {
@@ -138,14 +128,10 @@ class ShopProvider extends ChangeNotifier {
     }
     notifyListeners();
   }
-
-  /// 🔹 Hapus item dari keranjang
   void removeFromKeranjang(Bahan bahan) {
     _keranjang.remove(bahan);
     notifyListeners();
   }
-
-  /// 🔹 Tambah jumlah di keranjang
   void tambahJumlah(Bahan bahan) {
     final index = _keranjang.indexOf(bahan);
     if (index != -1) {
@@ -153,8 +139,6 @@ class ShopProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
-
-  /// 🔹 Kurangi jumlah di keranjang
   void kurangJumlah(Bahan bahan) {
     final index = _keranjang.indexOf(bahan);
     if (index != -1 && _keranjang[index].jumlah > 1) {
@@ -164,17 +148,11 @@ class ShopProvider extends ChangeNotifier {
     }
     notifyListeners();
   }
-
-  /// 🔹 Alias agar kompatibel dengan UI yang memanggil kurangiJumlah()
   void kurangiJumlah(Bahan bahan) => kurangJumlah(bahan);
-
-  /// 🔹 Hapus semua item di keranjang
   void clearKeranjang() {
     _keranjang.clear();
     notifyListeners();
   }
-
-  /// 🔹 Checkout & simpan ke history
   Future<void> checkout(String metodePembayaran) async {
     if (_keranjang.isEmpty) return;
 
@@ -206,8 +184,6 @@ class ShopProvider extends ChangeNotifier {
     _keranjang.clear();
     notifyListeners();
   }
-
-  /// 🔹 Load riwayat pembelian
   List<Map<String, dynamic>> _historyList = [];
   List<Map<String, dynamic>> get historyList => _historyList;
 

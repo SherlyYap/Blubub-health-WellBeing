@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 class WorkoutSessionPage extends StatefulWidget {
   final String workoutName;
-  final String workoutImage; // Sekarang bisa dari URL (gifUrl)
+  final String workoutImage; 
   final String workoutDescription;
   final int duration;
 
@@ -93,7 +93,6 @@ class _WorkoutSessionPageState extends State<WorkoutSessionPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // ✅ Ganti dari Image.asset() jadi Image.network()
             ClipRRect(
               borderRadius: BorderRadius.circular(20),
               child: Image.network(
@@ -101,14 +100,12 @@ class _WorkoutSessionPageState extends State<WorkoutSessionPage> {
                 height: 250,
                 width: double.infinity,
                 fit: BoxFit.cover,
-                // Jika gagal load gambar, tampilkan ikon pengganti
                 errorBuilder: (context, error, stackTrace) => Container(
                   height: 200,
                   color: Colors.grey[300],
                   alignment: Alignment.center,
                   child: const Icon(Icons.broken_image, size: 80, color: Colors.grey),
                 ),
-                // Bisa juga ditambah loading spinner
                 loadingBuilder: (context, child, loadingProgress) {
                   if (loadingProgress == null) return child;
                   return Container(
@@ -147,8 +144,6 @@ class _WorkoutSessionPageState extends State<WorkoutSessionPage> {
               style: GoogleFonts.nunito(fontSize: 20, fontWeight: FontWeight.w500),
             ),
             const SizedBox(height: 10),
-
-            // ✅ Countdown Timer
             Container(
               width: 150,
               height: 150,

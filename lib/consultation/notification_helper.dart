@@ -10,8 +10,6 @@ void showCustomNotification({
   required String message,
 }) {
   OverlaySupportEntry? entry;
-
-  // ✅ Simpan ke SharedPreferences
   saveNotification(title, message);
 
   entry = showSimpleNotification(

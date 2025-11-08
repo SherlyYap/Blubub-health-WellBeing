@@ -40,7 +40,6 @@ class _TestHistoryPageState extends State<TestHistoryPage> {
     _loadResults();
   }
 
-  /// Fungsi untuk memuat hasil tes dari database
   Future<void> _loadResults() async {
     List<Map<String, dynamic>> tempResults = [];
 
@@ -59,8 +58,6 @@ class _TestHistoryPageState extends State<TestHistoryPage> {
         });
       }
     }
-
-    // Urutkan semua hasil global berdasarkan tanggal terbaru
     tempResults.sort((a, b) {
       final aDate = _safeParseDate(a['date']);
       final bDate = _safeParseDate(b['date']);
@@ -71,8 +68,6 @@ class _TestHistoryPageState extends State<TestHistoryPage> {
       _allResults = tempResults;
     });
   }
-
-  /// Fungsi aman untuk parsing berbagai format tanggal
   DateTime _safeParseDate(dynamic value) {
     try {
       if (value is DateTime) return value;

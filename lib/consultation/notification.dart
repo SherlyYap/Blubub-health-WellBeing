@@ -54,7 +54,6 @@ class _NotificationsPageState extends State<NotificationsPage> {
                     color: Colors.grey[900],
                   ),
                 ),
-                // 🟩 Chip untuk menghapus semua notifikasi
                 Padding(
                   padding: const EdgeInsets.only(right: 16),
                   child: ActionChip(

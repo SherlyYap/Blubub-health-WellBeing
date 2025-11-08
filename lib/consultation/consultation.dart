@@ -1,4 +1,3 @@
-// ignore_for_file: use_key_in_widget_constructors, library_private_types_in_public_api, unused_local_variable
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:project/consultation/DoctorDetailPage.dart';
@@ -99,8 +98,7 @@ class _KonsultasiPageState extends State<KonsultasiPage> {
               SimpleDialogOption(
                 onPressed: () {
                   Navigator.pop(context);
-                  _filterBySpecialist(null); // Tampilkan semua
-                },
+                  _filterBySpecialist(null);
                 child: Text('Semua', style: GoogleFonts.nunito(),),
               ),
               ..._getSpecialistList().map((specialist) {

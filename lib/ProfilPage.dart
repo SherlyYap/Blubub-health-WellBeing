@@ -160,7 +160,7 @@ class _ProfilePageState extends State<ProfilePage> {
             if (confirm == true) {
               final prefs = await SharedPreferences.getInstance();
               await prefs.clear();
-              await prefs.setBool('isLoggedIn', false); // tambahan penting ✅
+              await prefs.setBool('isLoggedIn', false); 
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(

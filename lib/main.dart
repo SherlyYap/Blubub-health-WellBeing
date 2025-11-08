@@ -11,7 +11,6 @@ import 'package:project/navigation_service.dart';
 import 'package:project/consultation/notification_data.dart';
 import 'onboarding.dart';
 
-// ✅ Inisialisasi global Analytics
 final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 final FirebaseAnalyticsObserver observer =
     FirebaseAnalyticsObserver(analytics: analytics);
@@ -19,12 +18,8 @@ final FirebaseAnalyticsObserver observer =
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-
-  // 🔹 Log event saat aplikasi dimulai
   await analytics.setSessionTimeoutDuration(const Duration(minutes: 30));
   await analytics.logEvent(name: 'app_started');
-
-  // 🔹 Muat notifikasi dari database lokal
   await loadNotifications();
 
   runApp(
@@ -51,7 +46,7 @@ class MyApp extends StatelessWidget {
 
     return MaterialApp(
       navigatorKey: navigatorKey,
-      navigatorObservers: [observer], // ✅ agar navigasi tercatat di Firebase
+      navigatorObservers: [observer], 
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         brightness: Brightness.light,
@@ -98,8 +93,6 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-
-    // ✅ Catat event Splash Screen dibuka
     analytics.logEvent(name: 'splash_screen_viewed');
 
     Future.delayed(const Duration(seconds: 2), () {
