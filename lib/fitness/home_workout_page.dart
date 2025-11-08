@@ -149,7 +149,7 @@ class _HomeWorkoutPageState extends State<HomeWorkoutPage> {
               const SizedBox(height: 20),
               ElevatedButton.icon(
                 onPressed: () async {
-                  // ✅ Catat event ke Firebase Analytics
+                  // Catat event ke Firebase Analytics
                   await FirebaseAnalytics.instance.logEvent(
                     name: 'mulai_latihan',
                     parameters: {

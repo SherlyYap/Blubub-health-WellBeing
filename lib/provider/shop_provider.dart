@@ -62,7 +62,7 @@ class ShopProvider extends ChangeNotifier {
   int totalHarga() =>
       _keranjang.fold(0, (total, item) => total + item.harga * item.jumlah);
 
-  /// ✅ Load bahan dari DB, tanpa insert double
+  /// Load bahan dari DB, tanpa insert double
   Future<void> loadBahanFromDb() async {
     final dbData = await BahanDBHelper.getAllBahan();
 

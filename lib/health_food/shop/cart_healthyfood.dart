@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:project/health_food/shop/history_page.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:project/provider/shop_provider.dart';
@@ -17,34 +18,38 @@ class CartPage extends StatefulWidget {
 }
 
 class _CartPageState extends State<CartPage> {
-  final TextEditingController _metodeController = TextEditingController();
+  List<Map<String, dynamic>> historyList = [];
 
-  Future<void> _simpanPembelian(ShopProvider provider) async {
+  @override
+  void initState() {
+    super.initState();
+    _loadHistory();
+  }
+
+  Future<void> _loadHistory() async {
+    final data = await BahanDBHelper.getPurchaseHistory();
+    setState(() => historyList = data);
+  }
+
+  Future<void> _simpanPembelian(ShopProvider provider, String metode) async {
     if (provider.keranjang.isEmpty) return;
 
     final int totalHarga = provider.totalHarga();
-
-    final itemsList = provider.keranjang.map((e) {
-      return {
-        'nama': e.nama,
-        'jumlah': e.jumlah,
-        'harga': e.harga,
-        'total': e.harga * e.jumlah,
-      };
-    }).toList();
+    final itemsList =
+        provider.keranjang
+            .map(
+              (e) => {
+                'nama': e.nama,
+                'jumlah': e.jumlah,
+                'harga': e.harga,
+                'total': e.harga * e.jumlah,
+              },
+            )
+            .toList();
 
     final String itemsJson = jsonEncode(itemsList);
-    final String metode =
-        _metodeController.text.isEmpty ? 'Tunai' : _metodeController.text;
+    await BahanDBHelper.insertPurchaseHistory(itemsJson, totalHarga, metode);
 
-    // ✅ Simpan data pembelian ke database lokal
-    await BahanDBHelper.insertPurchaseHistory(
-      itemsJson,
-      totalHarga,
-      metode,
-    );
-
-    // ✅ Catat event pembayaran ke Firebase Analytics
     await analytics.logAddPaymentInfo(
       paymentType: metode,
       currency: 'IDR',
@@ -52,178 +57,392 @@ class _CartPageState extends State<CartPage> {
     );
 
     if (!mounted) return;
-
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Pembelian berhasil dan dicatat di Firebase Analytics!',
-          style: GoogleFonts.nunito(),
+          'Pembayaran berhasil!',
+          style: GoogleFonts.nunito(color: Colors.white),
         ),
+        backgroundColor: Colors.green,
       ),
     );
 
     provider.clearKeranjang();
-    Navigator.pop(context);
+    _loadHistory();
   }
 
-  void _pilihMetodePembayaran() {
-    showModalBottomSheet(
+  void _tampilkanMetodePembayaran(ShopProvider provider) {
+    String selectedMethod = "E-Wallet";
+
+    showDialog(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) {
-        final metodeList = ['Tunai', 'QRIS', 'Transfer Bank', 'E-Wallet'];
-        return Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Pilih Metode Pembayaran',
-                style: GoogleFonts.nunito(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+      builder:
+          (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: Text(
+              'Pilih Metode Pembayaran',
+              style: GoogleFonts.nunito(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+            content: StatefulBuilder(
+              builder: (context, setState) {
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    RadioListTile<String>(
+                      title: const Text('Kartu Kredit'),
+                      value: 'Kartu Kredit',
+                      groupValue: selectedMethod,
+                      onChanged: (val) => setState(() => selectedMethod = val!),
+                    ),
+                    RadioListTile<String>(
+                      title: const Text('E-Wallet'),
+                      value: 'E-Wallet',
+                      groupValue: selectedMethod,
+                      onChanged: (val) => setState(() => selectedMethod = val!),
+                    ),
+                    RadioListTile<String>(
+                      title: const Text('Transfer Bank'),
+                      value: 'Transfer Bank',
+                      groupValue: selectedMethod,
+                      onChanged: (val) => setState(() => selectedMethod = val!),
+                    ),
+                  ],
+                );
+              },
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  'Batal',
+                  style: GoogleFonts.nunito(color: Colors.red),
                 ),
               ),
-              const SizedBox(height: 12),
-              ...metodeList.map((metode) {
-                return ListTile(
-                  title: Text(metode, style: GoogleFonts.nunito(fontSize: 16)),
-                  onTap: () {
-                    setState(() {
-                      _metodeController.text = metode;
-                    });
-                    Navigator.pop(context);
-                  },
-                );
-              }).toList(),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xffEAE6FF),
+                ),
+                onPressed: () {
+                  Navigator.pop(context);
+                  _tampilkanKonfirmasiPesanan(provider, selectedMethod);
+                },
+                child: Text(
+                  'Next',
+                  style: GoogleFonts.nunito(color: Colors.black),
+                ),
+              ),
             ],
           ),
-        );
-      },
+    );
+  }
+
+  void _tampilkanKonfirmasiPesanan(ShopProvider provider, String metode) {
+    final totalHarga = provider.totalHarga();
+    final itemsList = provider.keranjang;
+
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: Text(
+              'Konfirmasi Pesanan',
+              style: GoogleFonts.nunito(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (var item in itemsList)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              "${item.nama}\n${item.jumlah} × Rp ${item.harga}",
+                              style: GoogleFonts.nunito(),
+                            ),
+                          ),
+                          Text(
+                            "Rp ${item.harga * item.jumlah}",
+                            style: GoogleFonts.nunito(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  const Divider(),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      "Total: Rp $totalHarga",
+                      style: GoogleFonts.nunito(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  'Kembali',
+                  style: GoogleFonts.nunito(color: Colors.red),
+                ),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xffEAE6FF),
+                ),
+                onPressed: () async {
+                  Navigator.pop(context);
+                  await _simpanPembelian(provider, metode);
+                },
+                child: Text(
+                  'Bayar',
+                  style: GoogleFonts.nunito(color: Colors.black),
+                ),
+              ),
+            ],
+          ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<ShopProvider>(context);
+    final total = provider.totalHarga();
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('Keranjang', style: GoogleFonts.nunito()),
-        backgroundColor: const Color.fromARGB(255, 202, 231, 255),
+        backgroundColor: const Color(0xffCBE5FF),
+        elevation: 0,
+        title: Text(
+          'Shopping Cart',
+          style: GoogleFonts.nunito(fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
       ),
-      body: provider.keranjang.isEmpty
-          ? Center(
-              child: Text(
-                'Keranjang masih kosong',
-                style: GoogleFonts.nunito(fontSize: 16),
-              ),
-            )
-          : Column(
-              children: [
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: provider.keranjang.length,
-                    itemBuilder: (context, index) {
-                      final item = provider.keranjang[index];
-                      return Card(
-                        margin: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 6),
-                        child: ListTile(
-                          leading: Image.asset(
-                            item.gambar,
-                            width: 50,
-                            height: 50,
-                            fit: BoxFit.cover,
+      body: Stack(
+        children: [
+          // ====== Bagian utama keranjang ======
+          provider.keranjang.isEmpty
+              ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.shopping_cart_outlined,
+                      size: 80,
+                      color: Colors.grey,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      "Keranjang kamu kosong!",
+                      style: GoogleFonts.nunito(fontSize: 16),
+                    ),
+                  ],
+                ),
+              )
+              : Column(
+                children: [
+                  // Daftar item
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: provider.keranjang.length,
+                      itemBuilder: (context, index) {
+                        final item = provider.keranjang[index];
+                        return Container(
+                          margin: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 6,
                           ),
-                          title: Text(
-                            item.nama,
-                            style:
-                                GoogleFonts.nunito(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Text(
-                            'Rp ${item.harga} x ${item.jumlah} = Rp ${item.harga * item.jumlah}',
-                            style: GoogleFonts.nunito(),
-                          ),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.remove_circle_outline),
-                                onPressed: () => provider.kurangiJumlah(item),
-                              ),
-                              Text(
-                                '${item.jumlah}',
-                                style: GoogleFonts.nunito(fontSize: 16),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.add_circle_outline),
-                                onPressed: () => provider.tambahJumlah(item),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.withOpacity(0.2),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
                               ),
                             ],
                           ),
-                        ),
-                      );
-                    },
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Row(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.asset(
+                                    item.gambar,
+                                    width: 50,
+                                    height: 50,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        item.nama,
+                                        style: GoogleFonts.nunito(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      Text(
+                                        "Rp ${item.harga} (per ${item.satuan})",
+                                        style: GoogleFonts.nunito(fontSize: 13),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Row(
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.remove_circle_outline,
+                                      ),
+                                      onPressed:
+                                          () => provider.kurangiJumlah(item),
+                                    ),
+                                    Text(
+                                      '${item.jumlah}',
+                                      style: GoogleFonts.nunito(fontSize: 16),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.add_circle_outline,
+                                      ),
+                                      onPressed:
+                                          () => provider.tambahJumlah(item),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.delete,
+                                        color: Colors.red,
+                                      ),
+                                      onPressed:
+                                          () => provider.removeFromKeranjang(
+                                            item,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      ElevatedButton.icon(
-                        onPressed: _pilihMetodePembayaran,
-                        icon: const Icon(Icons.credit_card),
-                        label: Text(
-                          _metodeController.text.isEmpty
-                              ? 'Pilih Metode Pembayaran'
-                              : 'Metode: ${_metodeController.text}',
-                          style: GoogleFonts.nunito(fontSize: 16),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              const Color.fromARGB(255, 0, 94, 172),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+
+                  // Total pembayaran
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      border: Border(
+                        top: BorderSide(color: Colors.grey, width: 0.2),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "Total:",
+                          style: GoogleFonts.nunito(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Total: Rp ${NumberFormat("#,###").format(provider.totalHarga())}',
-                        textAlign: TextAlign.right,
-                        style: GoogleFonts.nunito(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
+                        Text(
+                          "Rp ${provider.totalHarga()}",
+                          style: GoogleFonts.nunito(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 12),
-                      ElevatedButton.icon(
-                        onPressed: () async => await _simpanPembelian(provider),
-                        icon: const Icon(Icons.payment),
-                        label: Text(
-                          'Bayar Sekarang',
-                          style: GoogleFonts.nunito(fontSize: 16),
-                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Tombol Checkout
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed:
+                            provider.keranjang.isEmpty
+                                ? null
+                                : () => _tampilkanMetodePembayaran(provider),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xff0D273D),
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                        child: Text(
+                          "Checkout Sekarang",
+                          style: GoogleFonts.nunito(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
-                    ],
+                    ),
                   ),
+                ],
+              ),
+          if (provider.keranjang.isNotEmpty || historyList.isNotEmpty)
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: FractionalTranslation(
+                translation: const Offset(
+                  0,
+                  -2.5,
+                ), // 🔧 posisi di atas total pembayaran
+                child: FloatingActionButton.extended(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const HistoryPage(),
+                      ),
+                    );
+                  },
+                  label: Text("Riwayat", style: GoogleFonts.nunito()),
+                  icon: const Icon(Icons.receipt_long_rounded,
+                  color: Colors.white,),
+                  backgroundColor: const Color(0xff0D273D),
                 ),
-              ],
+              ),
             ),
+        ],
+      ),
     );
   }
 }

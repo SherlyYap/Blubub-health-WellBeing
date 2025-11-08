@@ -6,7 +6,7 @@ import 'package:project/global.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-// ✅ Halaman sukses setelah pembelian
+// Halaman sukses setelah melakukan pembelian
 class SubscriptionSuccessPage extends StatelessWidget {
   final String plan;
   final double price;
@@ -279,7 +279,7 @@ class _SubscriptionInfoPageState extends State<SubscriptionInfoPage> {
               ),
               ElevatedButton(
                 onPressed: () async {
-                  // ✅ Jangan pakai Future.delayed — langsung async
+                  // Simpan data ke SharedPreferences
                   Schedule? schedule = await showScheduleDialog(context);
 
                   if (schedule != null && context.mounted) {
@@ -299,7 +299,7 @@ class _SubscriptionInfoPageState extends State<SubscriptionInfoPage> {
 
                     confirmedPlan = title;
 
-                    // ✅ Simpan data & log ke Firebase
+                    // Simpan data & log ke Firebase
                     await FirebaseAnalytics.instance.logPurchase(
                       currency: 'USD',
                       value: finalPrice,
@@ -324,11 +324,11 @@ class _SubscriptionInfoPageState extends State<SubscriptionInfoPage> {
                     await prefs.setString(
                         'endDate', confirmedEndDate.toString());
 
-                    Navigator.pop(context); // ✅ Tutup dialog confirm
+                    Navigator.pop(context); //Tutup dialog confirm
                     ScaffoldMessenger.of(ctx).showSnackBar(
                       SnackBar(
                         content: Text(
-                          "✅ Pembayaran berhasil!\nPlan: $title\n"
+                          "Pembayaran berhasil!\nPlan: $title\n"
                           "Latihan: ${schedule.workoutType}\n"
                           "Jadwal: ${schedule.days.join(', ')}\n"
                           "Mulai: ${schedule.startDate.day}/${schedule.startDate.month}/${schedule.startDate.year}",
@@ -338,7 +338,7 @@ class _SubscriptionInfoPageState extends State<SubscriptionInfoPage> {
                       ),
                     );
 
-                    // ✅ Pindah ke halaman sukses
+                    // Pindah ke halaman sukses
                     await Future.delayed(const Duration(seconds: 2));
                     if (ctx.mounted) {
                       Navigator.push(
