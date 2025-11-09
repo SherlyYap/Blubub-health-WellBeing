@@ -93,13 +93,14 @@ class _KonsultasiPageState extends State<KonsultasiPage> {
       context: context,
       builder:
           (context) => SimpleDialog(
-            title: Text('Pilih Spesialis', style: GoogleFonts.nunito(),),
+            title: Text('Pilih Spesialis', style: GoogleFonts.nunito()),
             children: [
               SimpleDialogOption(
                 onPressed: () {
                   Navigator.pop(context);
                   _filterBySpecialist(null);
-                child: Text('Semua', style: GoogleFonts.nunito(),),
+                },
+                child: Text('Semua', style: GoogleFonts.nunito()),
               ),
               ..._getSpecialistList().map((specialist) {
                 return SimpleDialogOption(
@@ -107,7 +108,7 @@ class _KonsultasiPageState extends State<KonsultasiPage> {
                     Navigator.pop(context);
                     _filterBySpecialist(specialist);
                   },
-                  child: Text(specialist, style: GoogleFonts.nunito(),),
+                  child: Text(specialist, style: GoogleFonts.nunito()),
                 );
               }).toList(),
             ],
@@ -163,7 +164,10 @@ class _KonsultasiPageState extends State<KonsultasiPage> {
           Image.asset('img-project/logo.png', width: 200, height: 150),
           Text(
             'medan doctor',
-            style: GoogleFonts.nunito(fontSize: 22, fontWeight: FontWeight.bold),
+            style: GoogleFonts.nunito(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
@@ -223,7 +227,7 @@ class _KonsultasiPageState extends State<KonsultasiPage> {
                       ),
                       title: Text(
                         doctor['name']!,
-                        style:  GoogleFonts.nunito(
+                        style: GoogleFonts.nunito(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                         ),
@@ -242,7 +246,9 @@ class _KonsultasiPageState extends State<KonsultasiPage> {
                         children: [
                           Text(
                             doctor['specialist']!,
-                            style: GoogleFonts.nunito(color: const Color(0xff0D273D)),
+                            style: GoogleFonts.nunito(
+                              color: const Color(0xff0D273D),
+                            ),
                           ),
                           Row(
                             children: [
@@ -252,7 +258,10 @@ class _KonsultasiPageState extends State<KonsultasiPage> {
                                 color: Colors.grey,
                               ),
                               const SizedBox(width: 4),
-                              Text(doctor['hospital']!, style: GoogleFonts.nunito()),
+                              Text(
+                                doctor['hospital']!,
+                                style: GoogleFonts.nunito(),
+                              ),
                             ],
                           ),
                           const SizedBox(height: 4),
@@ -342,7 +351,7 @@ class _KonsultasiPageState extends State<KonsultasiPage> {
         backgroundColor: const Color(0xff0D273D),
         foregroundColor: Colors.white,
         icon: const Icon(Icons.shopping_cart),
-        label: Text("online pharmacy", style: GoogleFonts.nunito(),),
+        label: Text("online pharmacy", style: GoogleFonts.nunito()),
       ),
     );
   }
