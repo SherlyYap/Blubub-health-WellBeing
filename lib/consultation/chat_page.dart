@@ -4,7 +4,7 @@ import 'package:flutter_chat_ui/flutter_chat_ui.dart';
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
 import 'package:uuid/uuid.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:project/database/db_chat_helper.dart'; // file database helper
+import 'package:project/database/db_chat_helper.dart'; 
 
 class ChatPage extends StatefulWidget {
   final String doctorName;
