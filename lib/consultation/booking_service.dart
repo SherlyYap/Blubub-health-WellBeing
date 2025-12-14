@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:project/consultation/notification_data.dart';
 
 class BookingService {
   static Future<void> saveBooking({
@@ -8,7 +9,8 @@ class BookingService {
     required String date,
     required String time,
   }) async {
-    await FirebaseFirestore.instance.collection('bookings').add({
+    final docRef =
+        await FirebaseFirestore.instance.collection('bookings').add({
       "doctorName": doctorName,
       "specialist": specialist,
       "hospital": hospital,
@@ -16,5 +18,11 @@ class BookingService {
       "time": time,
       "createdAt": FieldValue.serverTimestamp(),
     });
-  }
+
+    await saveNotification(
+      title: "Booking Berhasil",
+      message: "Booking dengan $doctorName pada $date pukul $time",
+      docId: docRef.id,
+);
+}
 }

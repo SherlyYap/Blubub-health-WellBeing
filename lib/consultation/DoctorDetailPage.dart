@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:project/consultation/notification_data.dart';
 import 'package:project/consultation/notification_helper.dart';
 import 'package:project/consultation/chat_page.dart';
 import 'package:project/consultation/booking_service.dart';
@@ -63,11 +62,16 @@ class _DoctorDetailPageState extends State<DoctorDetailPage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.location_on_outlined,
-                              size: 16, color: Colors.white),
+                          const Icon(
+                            Icons.location_on_outlined,
+                            size: 16,
+                            color: Colors.white,
+                          ),
                           const SizedBox(width: 4),
-                          Text("Medan, Indonesia",
-                              style: GoogleFonts.nunito(color: Colors.white)),
+                          Text(
+                            "Medan, Indonesia",
+                            style: GoogleFonts.nunito(color: Colors.white),
+                          ),
                         ],
                       ),
                     ],
@@ -96,8 +100,8 @@ class _DoctorDetailPageState extends State<DoctorDetailPage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) =>
-                          ChatPage(doctorName: widget.doctor['name']!),
+                      builder:
+                          (_) => ChatPage(doctorName: widget.doctor['name']!),
                     ),
                   );
                 },
@@ -116,7 +120,6 @@ class _DoctorDetailPageState extends State<DoctorDetailPage> {
               ),
             ),
 
-            // DETAIL INFO
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
@@ -124,8 +127,10 @@ class _DoctorDetailPageState extends State<DoctorDetailPage> {
                 children: [
                   const Divider(thickness: 1),
                   const SizedBox(height: 12),
-                  section("Tentang Dokter",
-                      "Dokter berpengalaman dalam bidang ${widget.doctor['specialist']}. Ramah, komunikatif, dan terpercaya."),
+                  section(
+                    "Tentang Dokter",
+                    "Dokter berpengalaman dalam bidang ${widget.doctor['specialist']}. Ramah, komunikatif, dan terpercaya.",
+                  ),
                   const SizedBox(height: 16),
                   const Divider(thickness: 1),
                   const SizedBox(height: 12),
@@ -139,8 +144,6 @@ class _DoctorDetailPageState extends State<DoctorDetailPage> {
             ),
 
             const SizedBox(height: 16),
-
-            // BOOK BUTTON
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: ElevatedButton(
@@ -165,10 +168,6 @@ class _DoctorDetailPageState extends State<DoctorDetailPage> {
       ),
     );
   }
-
-  // =======================
-  // BOOKING MODAL FUNCTION
-  // =======================
 
   void showBookingModal(BuildContext context) {
     showModalBottomSheet(
@@ -219,24 +218,27 @@ class _DoctorDetailPageState extends State<DoctorDetailPage> {
                   ),
 
                   const SizedBox(height: 16),
-
-                  // =============================
-                  // INFO BOOKING
-                  // =============================
-
-                  Text("Nama Dokter: Dr. ${widget.doctor['name']}",
-                      style: GoogleFonts.nunito(fontSize: 16)),
-                  Text("Spesialis: ${widget.doctor['specialist']}",
-                      style: GoogleFonts.nunito(fontSize: 16)),
-                  Text("Rumah Sakit: ${widget.doctor['hospital']}",
-                      style: GoogleFonts.nunito(fontSize: 16)),
+                  Text(
+                    "Nama Dokter: Dr. ${widget.doctor['name']}",
+                    style: GoogleFonts.nunito(fontSize: 16),
+                  ),
+                  Text(
+                    "Spesialis: ${widget.doctor['specialist']}",
+                    style: GoogleFonts.nunito(fontSize: 16),
+                  ),
+                  Text(
+                    "Rumah Sakit: ${widget.doctor['hospital']}",
+                    style: GoogleFonts.nunito(fontSize: 16),
+                  ),
 
                   const SizedBox(height: 12),
-
-                  // PILIH TANGGAL
-                  Text("Pilih Tanggal:",
-                      style: GoogleFonts.nunito(
-                          fontSize: 16, fontWeight: FontWeight.bold)),
+                  Text(
+                    "Pilih Tanggal:",
+                    style: GoogleFonts.nunito(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   const SizedBox(height: 8),
 
                   ElevatedButton.icon(
@@ -245,9 +247,7 @@ class _DoctorDetailPageState extends State<DoctorDetailPage> {
                         context: context,
                         initialDate: DateTime.now(),
                         firstDate: DateTime.now(),
-                        lastDate: DateTime.now().add(
-                          const Duration(days: 365),
-                        ),
+                        lastDate: DateTime.now().add(const Duration(days: 365)),
                       );
                       if (pickedDate != null) {
                         setModalState(() {
@@ -270,22 +270,25 @@ class _DoctorDetailPageState extends State<DoctorDetailPage> {
                   if (selectedDay.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(top: 8),
-                      child: Text("Tanggal yang dipilih: $selectedDay",
-                          style: GoogleFonts.nunito(fontSize: 16)),
+                      child: Text(
+                        "Tanggal yang dipilih: $selectedDay",
+                        style: GoogleFonts.nunito(fontSize: 16),
+                      ),
                     ),
 
                   const SizedBox(height: 16),
-
-                  // PILIH WAKTU
-                  Text("Pilih Waktu:",
-                      style: GoogleFonts.nunito(
-                          fontSize: 16, fontWeight: FontWeight.bold)),
+                  Text(
+                    "Pilih Waktu:",
+                    style: GoogleFonts.nunito(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   const SizedBox(height: 8),
 
                   ElevatedButton.icon(
                     onPressed: () async {
-                      TimeOfDay? pickedTime =
-                          await showTimePicker(
+                      TimeOfDay? pickedTime = await showTimePicker(
                         context: context,
                         initialTime: TimeOfDay.now(),
                       );
@@ -310,16 +313,12 @@ class _DoctorDetailPageState extends State<DoctorDetailPage> {
                     Padding(
                       padding: const EdgeInsets.only(top: 8),
                       child: Text(
-                          "Waktu yang dipilih: ${selectedTime!.format(context)}",
-                          style: GoogleFonts.nunito(fontSize: 16)),
+                        "Waktu yang dipilih: ${selectedTime!.format(context)}",
+                        style: GoogleFonts.nunito(fontSize: 16),
+                      ),
                     ),
 
                   const SizedBox(height: 16),
-
-                  // =============================
-                  // KONFIRMASI BOOKING
-                  // =============================
-
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xff0D273D),
@@ -328,64 +327,29 @@ class _DoctorDetailPageState extends State<DoctorDetailPage> {
                       ),
                       minimumSize: const Size(double.infinity, 50),
                     ),
-                    onPressed: (selectedDay.isNotEmpty && selectedTime != null)
-                        ? () async {
-                            Navigator.pop(context);
+                    onPressed:
+                        (selectedDay.isNotEmpty && selectedTime != null)
+                            ? () async {
+                              Navigator.pop(context);
 
-                            String formattedTime =
-                                selectedTime!.format(context);
+                              String formattedTime = selectedTime!.format(
+                                context,
+                              );
 
-                            // SIMPAN KE FIRESTORE
-                            await BookingService.saveBooking(
-                              doctorName: widget.doctor['name']!,
-                              specialist: widget.doctor['specialist']!,
-                              hospital: widget.doctor['hospital']!,
-                              date: selectedDay,
-                              time: formattedTime,
-                            );
-
-                            // NOTIFIKASI CUSTOM
-                            showCustomNotification(
-                              title: "Booking Berhasil",
-                              message:
-                                  "Anda berhasil booking Dr. ${widget.doctor['name']} jam $formattedTime",
-                            );
-
-                            // SNACKBAR KONFIRMASI
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Jadwal pada $selectedDay pukul $formattedTime berhasil dikonfirmasi!',
-                                  style: GoogleFonts.nunito(
-                                      color: const Color(0XFF031716)),
-                                ),
-                                backgroundColor: const Color(0xffCDD7DF),
-                              ),
-                            );
-
-                            // TAMBAH KE NOTIFIKASI LOKAL
-                            customNotifications.insert(0, {
-                              'emoji': '💬',
-                              'title': 'Booking Berhasil',
-                              'time': 'Baru saja',
-                              'description':
-                                  'Jadwal dengan Dr. ${widget.doctor['name']} telah dikonfirmasi untuk $selectedDay pukul $formattedTime.',
-                              'action1': 'Lihat',
-                            });
-
-                            // NOTIFIKASI TAMBAHAN
-                            Future.delayed(
-                              const Duration(seconds: 8),
-                              () {
-                                showCustomNotification(
-                                  title: "Pesan Baru",
-                                  message:
-                                      "Jadwal konsultasi kamu telah dikonfirmasi.",
-                                );
-                              },
-                            );
-                          }
-                        : null,
+                              await BookingService.saveBooking(
+                                doctorName: widget.doctor['name']!,
+                                specialist: widget.doctor['specialist']!,
+                                hospital: widget.doctor['hospital']!,
+                                date: selectedDay,
+                                time: formattedTime,
+                              );
+                              showCustomNotification(
+                                title: "Booking Berhasil",
+                                message:
+                                    "Anda berhasil booking Dr. ${widget.doctor['name']} jam $formattedTime",
+                              );
+                            }
+                            : null,
                     child: Text(
                       "Konfirmasi Jadwal",
                       style: GoogleFonts.nunito(color: Colors.white),
@@ -399,8 +363,6 @@ class _DoctorDetailPageState extends State<DoctorDetailPage> {
       },
     );
   }
-
-  // WIDGET KARTU INFO
   Widget infoCard(String title, String value) {
     return Container(
       width: 100,
@@ -427,7 +389,6 @@ class _DoctorDetailPageState extends State<DoctorDetailPage> {
     );
   }
 
-  // WIDGET SECTION
   Widget section(String title, String content) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -445,7 +406,7 @@ class _DoctorDetailPageState extends State<DoctorDetailPage> {
           content,
           style: GoogleFonts.nunito(color: Color(0xff0D273D), fontSize: 14),
         ),
-      ],
-    );
-  }
+     ],
+);
+}
 }

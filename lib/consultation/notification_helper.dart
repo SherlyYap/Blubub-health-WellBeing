@@ -1,16 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:overlay_support/overlay_support.dart';
-import 'package:project/consultation/notification.dart';
 import 'package:project/navigation_service.dart';
-import 'package:project/consultation/notification_data.dart'; 
+import 'package:project/consultation/notification.dart';
 
 void showCustomNotification({
   required String title,
   required String message,
 }) {
   OverlaySupportEntry? entry;
-  saveNotification(title, message);
 
   entry = showSimpleNotification(
     GestureDetector(
@@ -28,11 +26,17 @@ void showCustomNotification({
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title,
-                    style: GoogleFonts.nunito(
-                        color: Colors.white, fontWeight: FontWeight.bold)),
-                Text(message,
-                    style: GoogleFonts.nunito(color: Colors.white70)),
+                Text(
+                  title,
+                  style: GoogleFonts.nunito(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  message,
+                  style: GoogleFonts.nunito(color: Colors.white70),
+                ),
               ],
             ),
           ),
@@ -40,6 +44,6 @@ void showCustomNotification({
       ),
     ),
     background: const Color(0xff0D273D),
-    duration: const Duration(seconds: 5),
-  );
+    duration: const Duration(seconds:5),
+);
 }

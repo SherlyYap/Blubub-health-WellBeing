@@ -16,30 +16,50 @@ class _NotificationsPageState extends State<NotificationsPage> {
   @override
   void initState() {
     super.initState();
-    loadNotifications().then((_) {
-      setState(() {});
-    });
+    loadNotifications().then((_) => setState(() {}));
   }
 
-  Future<void> _clearAllNotifications() async {
-    await clearNotifications();
-    setState(() {});
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Semua notifikasi telah dihapus'),
-        duration: Duration(seconds: 2),
-      ),
+  Future<void> _clearAll() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder:
+          (_) => AlertDialog(
+            title: const Text("Konfirmasi"),
+            content: const Text("Yakin ingin menghapus semua notifikasi?"),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text("Batal"),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text("Hapus", style: TextStyle(color: Colors.red)),
+              ),
+            ],
+          ),
     );
+
+    if (confirm == true) {
+      await clearNotifications();
+      setState(() {});
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Semua notifikasi berhasil dihapus")),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).brightness == Brightness.dark
-          ? Colors.black
-          : const Color.fromARGB(255, 202, 231, 255),
+      backgroundColor:
+          Theme.of(context).brightness == Brightness.dark
+              ? Colors.black
+              : const Color.fromARGB(255, 202, 231, 255),
+
       body: SafeArea(
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 20),
             Row(
@@ -47,16 +67,18 @@ class _NotificationsPageState extends State<NotificationsPage> {
               children: [
                 const SizedBox(width: 16),
                 Text(
-                  'Notifications',
+                  "Notifications",
                   style: GoogleFonts.nunito(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: Colors.grey[900],
                   ),
                 ),
+
                 Padding(
                   padding: const EdgeInsets.only(right: 16),
                   child: ActionChip(
+                    backgroundColor: const Color(0xff0D273D),
                     label: Text(
                       "Hapus Semua",
                       style: GoogleFonts.nunito(
@@ -64,37 +86,96 @@ class _NotificationsPageState extends State<NotificationsPage> {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    backgroundColor: const Color(0xff0D273D),
-                    onPressed: _clearAllNotifications,
+                    onPressed: _clearAll,
                   ),
                 ),
               ],
             ),
+
             const SizedBox(height: 20),
             Expanded(
-              child: customNotifications.isEmpty
-                  ? Center(
-                      child: Text(
-                        'Tidak ada notifikasi',
-                        style: GoogleFonts.nunito(
-                          color: Colors.grey[700],
-                          fontSize: 16,
-                        ),
-                      ),
-                    )
-                  : ListView(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      children: [
-                        for (var notif in customNotifications)
-                          NotificationCard(
-                            emoji: notif['emoji'] ?? '🔔',
-                            title: notif['title'] ?? '',
-                            time: notif['time'] ?? '',
-                            description: notif['message'] ?? '',
-                            action1: "Lihat Detail",
+              child:
+                  customNotifications.isEmpty
+                      ? Center(
+                        child: Text(
+                          "Tidak ada notifikasi",
+                          style: GoogleFonts.nunito(
+                            color: Colors.grey[700],
+                            fontSize: 16,
                           ),
-                      ],
-                    ),
+                        ),
+                      )
+                      : ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        itemCount: customNotifications.length,
+                        itemBuilder: (context, index) {
+                          final item = customNotifications[index];
+
+                          return Dismissible(
+                            key: Key(item['time'] ?? index.toString()),
+                            direction: DismissDirection.endToStart,
+
+                            background: Container(
+                              alignment: Alignment.centerRight,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                              ),
+                              color: Colors.red,
+                              child: const Icon(
+                                Icons.delete,
+                                color: Colors.white,
+                              ),
+                            ),
+
+                            confirmDismiss: (_) async {
+                              return await showDialog<bool>(
+                                context: context,
+                                builder:
+                                    (_) => AlertDialog(
+                                      title: const Text("Hapus Notifikasi"),
+                                      content: const Text(
+                                        "Apakah kamu yakin ingin menghapus notifikasi ini?",
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed:
+                                              () =>
+                                                  Navigator.pop(context, false),
+                                          child: const Text("Batal"),
+                                        ),
+                                        TextButton(
+                                          onPressed:
+                                              () =>
+                                                  Navigator.pop(context, true),
+                                          child: const Text(
+                                            "Hapus",
+                                            style: TextStyle(color: Colors.red),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                              );
+                            },
+
+                            onDismissed: (_) async {
+                              await deleteNotificationAt(index);
+                              setState(() {});
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text("Notifikasi berhasil dihapus"),
+                                ),
+                              );
+                            },
+
+                            child: NotificationCard(
+                              title: item['title'] ?? '',
+                              time: item['time'] ?? '',
+                              description: item['message'] ?? '',
+                              action1: "Lihat Detail",
+                            ),
+                          );
+                        },
+                      ),
             ),
           ],
         ),
@@ -110,7 +191,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
             case 0:
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (context) => const MainMenuPage()),
+                MaterialPageRoute(builder: (_) => const MainMenuPage()),
               );
               break;
             case 1:
@@ -118,22 +199,22 @@ class _NotificationsPageState extends State<NotificationsPage> {
             case 2:
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (context) => ArticlePage()),
+                MaterialPageRoute(builder: (_) => ArticlePage()),
               );
               break;
             case 3:
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (context) => const ProfilePage()),
+                MaterialPageRoute(builder: (_) => const ProfilePage()),
               );
               break;
           }
         },
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.mail), label: 'Inbox'),
-          BottomNavigationBarItem(icon: Icon(Icons.article), label: 'Article'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profil'),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
+          BottomNavigationBarItem(icon: Icon(Icons.mail), label: "Inbox"),
+          BottomNavigationBarItem(icon: Icon(Icons.article), label: "Article"),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profil"),
         ],
       ),
     );
@@ -141,21 +222,17 @@ class _NotificationsPageState extends State<NotificationsPage> {
 }
 
 class NotificationCard extends StatelessWidget {
-  final String emoji;
   final String title;
   final String time;
   final String description;
   final String action1;
-  final String? action2;
 
   const NotificationCard({
     super.key,
-    required this.emoji,
     required this.title,
     required this.time,
     required this.description,
     required this.action1,
-    this.action2,
   });
 
   @override
@@ -166,72 +243,62 @@ class NotificationCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 6)],
+        boxShadow: [
+          BoxShadow(color: Colors.black12.withOpacity(0.1), blurRadius: 6),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Text(emoji, style: GoogleFonts.nunito(fontSize: 20)),
+              const Icon(
+                Icons.notifications_active,
+                color: Colors.orange,
+                size: 22,
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   title,
                   style: GoogleFonts.nunito(
-                    fontWeight: FontWeight.bold,
                     fontSize: 16,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
               Text(
                 time,
-                style: GoogleFonts.nunito(
-                  color: Colors.black,
-                  fontSize: 12,
-                ),
+                style: GoogleFonts.nunito(fontSize: 12, color: Colors.black),
               ),
             ],
           ),
+
           const SizedBox(height: 8),
+
           Text(
             description,
             style: GoogleFonts.nunito(
-              color: Colors.grey[700],
               fontSize: 14,
+              color: Colors.grey.shade700,
             ),
           ),
+
           const SizedBox(height: 10),
-          Wrap(
-            spacing: 10,
-            children: [
-              GestureDetector(
-                onTap: () {},
-                child: Text(
-                  action1,
-                  style: GoogleFonts.nunito(
-                    color: const Color(0xff0D273D),
-                    fontSize: 14,
-                    decoration: TextDecoration.underline,
-                  ),
-                ),
+
+          GestureDetector(
+            onTap: () {},
+            child: Text(
+              action1,
+              style: GoogleFonts.nunito(
+                color: const Color(0xff0D273D),
+                fontSize: 14,
+                decoration: TextDecoration.underline,
               ),
-              if (action2 != null)
-                GestureDetector(
-                  onTap: () {},
-                  child: Text(
-                    action2!,
-                    style: GoogleFonts.nunito(
-                      color: const Color(0xff0D273D),
-                      fontSize: 14,
-                      decoration: TextDecoration.underline,
-                    ),
-                  ),
-                ),
-            ],
+            ),
           ),
         ],
-      ),
-    );
-  }
+     ),
+);
+}
 }
