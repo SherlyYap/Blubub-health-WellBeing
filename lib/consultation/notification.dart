@@ -4,6 +4,7 @@ import 'package:project/ProfilPage.dart';
 import 'package:project/artikel.dart';
 import 'package:project/main_page.dart';
 import 'package:project/consultation/notification_data.dart';
+import 'package:project/localization/app_localizations.dart';
 
 class NotificationsPage extends StatefulWidget {
   const NotificationsPage({super.key});
@@ -20,20 +21,23 @@ class _NotificationsPageState extends State<NotificationsPage> {
   }
 
   Future<void> _clearAll() async {
+    final loc = AppLocalizations.of(context);
+
     final confirm = await showDialog<bool>(
       context: context,
       builder:
           (_) => AlertDialog(
-            title: const Text("Konfirmasi"),
-            content: const Text("Yakin ingin menghapus semua notifikasi?"),
+            title: Text(loc.translate('confirm')),
+            content: Text(loc.translate('clear_all_notifications_confirm')),
+
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text("Batal"),
+                child: Text(loc.translate('cancel')),
               ),
               TextButton(
                 onPressed: () => Navigator.pop(context, true),
-                child: const Text("Hapus", style: TextStyle(color: Colors.red)),
+                child: Text(loc.translate('delete'), style: TextStyle(color: Colors.red)),
               ),
             ],
           ),
@@ -44,13 +48,14 @@ class _NotificationsPageState extends State<NotificationsPage> {
       setState(() {});
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Semua notifikasi berhasil dihapus")),
+        SnackBar(content: Text(loc.translate('all_notifications_deleted'))),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor:
           Theme.of(context).brightness == Brightness.dark
@@ -67,7 +72,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
               children: [
                 const SizedBox(width: 16),
                 Text(
-                  "Notifications",
+                  loc.translate('notifications'),
                   style: GoogleFonts.nunito(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -80,7 +85,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                   child: ActionChip(
                     backgroundColor: const Color(0xff0D273D),
                     label: Text(
-                      "Hapus Semua",
+                      loc.translate('delete_all'),
                       style: GoogleFonts.nunito(
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
@@ -98,7 +103,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                   customNotifications.isEmpty
                       ? Center(
                         child: Text(
-                          "Tidak ada notifikasi",
+                          loc.translate('no_notifications'),
                           style: GoogleFonts.nunito(
                             color: Colors.grey[700],
                             fontSize: 16,
@@ -132,23 +137,21 @@ class _NotificationsPageState extends State<NotificationsPage> {
                                 context: context,
                                 builder:
                                     (_) => AlertDialog(
-                                      title: const Text("Hapus Notifikasi"),
-                                      content: const Text(
-                                        "Apakah kamu yakin ingin menghapus notifikasi ini?",
-                                      ),
+                                      title: Text(loc.translate('delete_notification')),
+                                      content:  Text(loc.translate('delete_notification_confirm')),
                                       actions: [
                                         TextButton(
                                           onPressed:
                                               () =>
                                                   Navigator.pop(context, false),
-                                          child: const Text("Batal"),
+                                          child:Text(loc.translate('cancel')),
                                         ),
                                         TextButton(
                                           onPressed:
                                               () =>
                                                   Navigator.pop(context, true),
-                                          child: const Text(
-                                            "Hapus",
+                                          child: Text(
+                                            loc.translate('delete'),
                                             style: TextStyle(color: Colors.red),
                                           ),
                                         ),
@@ -161,8 +164,8 @@ class _NotificationsPageState extends State<NotificationsPage> {
                               await deleteNotificationAt(index);
                               setState(() {});
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text("Notifikasi berhasil dihapus"),
+                                SnackBar(
+                                  content: Text(loc.translate('notification_deleted')),
                                 ),
                               );
                             },
@@ -171,7 +174,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                               title: item['title'] ?? '',
                               time: item['time'] ?? '',
                               description: item['message'] ?? '',
-                              action1: "Lihat Detail",
+                              action1:loc.translate('view_detail'),
                             ),
                           );
                         },
@@ -210,11 +213,11 @@ class _NotificationsPageState extends State<NotificationsPage> {
               break;
           }
         },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-          BottomNavigationBarItem(icon: Icon(Icons.mail), label: "Inbox"),
-          BottomNavigationBarItem(icon: Icon(Icons.article), label: "Article"),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profil"),
+        items:  [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: loc.translate('home')),
+          BottomNavigationBarItem(icon: Icon(Icons.mail), label: loc.translate('inbox')),
+          BottomNavigationBarItem(icon: Icon(Icons.article), label: loc.translate('article')),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: loc.translate('profile')),
         ],
       ),
     );
@@ -298,7 +301,7 @@ class NotificationCard extends StatelessWidget {
             ),
           ),
         ],
-     ),
-);
-}
+      ),
+    );
+  }
 }

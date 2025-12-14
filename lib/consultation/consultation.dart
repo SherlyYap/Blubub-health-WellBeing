@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:project/consultation/DoctorDetailPage.dart';
 import 'package:project/ProfilPage.dart';
+import 'package:project/localization/app_localizations.dart';
 import 'package:project/main_page.dart';
 import 'package:project/consultation/notification.dart';
 import '../artikel.dart';
@@ -89,18 +90,20 @@ class _KonsultasiPageState extends State<KonsultasiPage> {
   }
 
   void _showFilterDialog() {
+    final loc = AppLocalizations.of(context);
+
     showDialog(
       context: context,
       builder:
           (context) => SimpleDialog(
-            title: Text('Pilih Spesialis', style: GoogleFonts.nunito()),
+            title: Text(loc.translate("choose_specialist"), style: GoogleFonts.nunito()),
             children: [
               SimpleDialogOption(
                 onPressed: () {
                   Navigator.pop(context);
                   _filterBySpecialist(null);
                 },
-                child: Text('Semua', style: GoogleFonts.nunito()),
+                child: Text(loc.translate("all"), style: GoogleFonts.nunito()),
               ),
               ..._getSpecialistList().map((specialist) {
                 return SimpleDialogOption(
@@ -146,6 +149,7 @@ class _KonsultasiPageState extends State<KonsultasiPage> {
   @override
   Widget build(BuildContext context) {
     final favoriteProvider = Provider.of<FavoriteProvider>(context);
+    final loc = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor:
           Theme.of(context).brightness == Brightness.dark
@@ -163,7 +167,7 @@ class _KonsultasiPageState extends State<KonsultasiPage> {
         children: [
           Image.asset('img-project/logo.png', width: 200, height: 150),
           Text(
-            'medan doctor',
+            loc.translate("medan_doctor"),
             style: GoogleFonts.nunito(
               fontSize: 22,
               fontWeight: FontWeight.bold,
@@ -174,7 +178,7 @@ class _KonsultasiPageState extends State<KonsultasiPage> {
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: "Search Doctor...",
+                hintText: loc.translate("search_doctor"),
                 prefixIcon: const Icon(Icons.search),
                 filled: true,
                 fillColor: Colors.white,
@@ -189,7 +193,7 @@ class _KonsultasiPageState extends State<KonsultasiPage> {
             onPressed: _showFilterDialog,
             icon: Icon(Icons.filter_list, color: const Color(0xff0D273D)),
             label: Text(
-              "Filter Spesialis",
+              loc.translate("filter_specialist"),
               style: GoogleFonts.nunito(color: const Color(0xff0D273D)),
             ),
           ),
@@ -334,11 +338,11 @@ class _KonsultasiPageState extends State<KonsultasiPage> {
               break;
           }
         },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.mail), label: 'Inbox'),
-          BottomNavigationBarItem(icon: Icon(Icons.article), label: 'Article'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profil'),
+        items: [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: loc.translate("home")),
+          BottomNavigationBarItem(icon: Icon(Icons.mail), label: loc.translate("inbox")),
+          BottomNavigationBarItem(icon: Icon(Icons.article), label: loc.translate("article")),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: loc.translate("profile")),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -351,7 +355,7 @@ class _KonsultasiPageState extends State<KonsultasiPage> {
         backgroundColor: const Color(0xff0D273D),
         foregroundColor: Colors.white,
         icon: const Icon(Icons.shopping_cart),
-        label: Text("online pharmacy", style: GoogleFonts.nunito()),
+        label: Text(loc.translate("online_pharmacy"), style: GoogleFonts.nunito()),
       ),
     );
   }

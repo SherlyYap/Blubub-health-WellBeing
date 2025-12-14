@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'cart_page.dart'; 
+import 'package:project/localization/app_localizations.dart';
 
 class ShopPage extends StatefulWidget {
   const ShopPage({super.key});
@@ -14,65 +15,66 @@ class _ShopPageState extends State<ShopPage> {
     {
       'name': 'Sertraline',
       'price': 'Rp 45.000',
-      'description': 'Antidepresan untuk gangguan kecemasan & depresi.',
+      'descriptionKey': 'sertraline_desc',
     },
     {
       'name': 'Fluoxetine',
       'price': 'Rp 40.000',
-      'description': 'Meningkatkan suasana hati, digunakan untuk depresi berat.',
+      'descriptionKey': 'fluoxetine_desc',
     },
     {
       'name': 'Diazepam',
       'price': 'Rp 30.000',
-      'description': 'Mengurangi kecemasan, digunakan juga sebagai penenang.',
+      'descriptionKey': 'diazepam_desc',
     },
     {
       'name': 'Lorazepam',
       'price': 'Rp 32.000',
-      'description': 'Obat penenang untuk serangan panik & insomnia.',
+      'descriptionKey': 'lorazepam_desc',
     },
     {
       'name': 'Haloperidol',
       'price': 'Rp 28.000',
-      'description': 'Antipsikotik untuk skizofrenia & gangguan bipolar.',
+      'descriptionKey': 'haloperidol_desc',
     },
     {
       'name': 'Olanzapine',
       'price': 'Rp 50.000',
-      'description': 'Menstabilkan mood untuk pasien bipolar & skizofrenia.',
+      'descriptionKey': 'olanzapine_desc',
     },
     {
       'name': 'Risperidone',
       'price': 'Rp 35.000',
-      'description': 'Antipsikotik untuk autisme & bipolar.',
+      'descriptionKey': 'risperidone_desc',
     },
     {
       'name': 'Quetiapine',
       'price': 'Rp 55.000',
-      'description': 'Mengurangi delusi, stabilkan mood pasien bipolar.',
+      'descriptionKey': 'quetiapine_desc',
     },
     {
       'name': 'Clonazepam',
       'price': 'Rp 33.000',
-      'description': 'Obat penenang untuk gangguan panik & kejang.',
+      'descriptionKey': 'clonazepam_desc',
     },
     {
       'name': 'Escitalopram',
       'price': 'Rp 48.000',
-      'description': 'SSRI untuk gangguan depresi & kecemasan umum.',
+      'descriptionKey': 'escitalopram_desc',
     },
   ];
 
   final List<Map<String, String>> cartItems = [];
 
   void addToCart(Map<String, String> item) {
+    final loc = AppLocalizations.of(context);
     setState(() {
       cartItems.add(item);
     });
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          '${item['name']} ditambahkan ke keranjang!',
+          '${item['name']} ${loc.translate('added_to_cart_simple')}',
           style: GoogleFonts.nunito(),
         ),
         duration: const Duration(seconds: 2),
@@ -100,10 +102,11 @@ class _ShopPageState extends State<ShopPage> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          "Toko Obat Mental Health",
+          loc.translate('mental_health_store'),
           style: GoogleFonts.nunito(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         backgroundColor: const Color(0xff0D273D),
@@ -170,7 +173,7 @@ class _ShopPageState extends State<ShopPage> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    med['description']!,
+                    loc.translate(med['descriptionKey']!),
                     style: GoogleFonts.nunito(
                       fontSize: 14,
                       color: Colors.black87,
@@ -197,7 +200,7 @@ class _ShopPageState extends State<ShopPage> {
                         ),
                         onPressed: () => addToCart(med),
                         child: Text(
-                          'Beli',
+                          loc.translate('buy'),
                           style: GoogleFonts.nunito(
                             color: Colors.white,
                             fontWeight: FontWeight.w600,

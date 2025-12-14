@@ -6,6 +6,7 @@ import 'ArticleDetailPage.dart';
 import 'ProfilPage.dart';
 import 'main_page.dart';
 import 'consultation/notification.dart';
+import 'package:project/localization/app_localizations.dart';
 
 class ArticlePage extends StatefulWidget {
   const ArticlePage({super.key});
@@ -78,13 +79,14 @@ class _ArticlePageState extends State<ArticlePage> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       backgroundColor:
           isDark ? Colors.black : const Color.fromARGB(255, 202, 231, 255),
       appBar: AppBar(
         title: Text(
-          'Artikel Kesehatan',
+          loc.translate('article_title'),
           style: GoogleFonts.nunito(
             fontWeight: FontWeight.bold,
             color: Colors.black,
@@ -107,7 +109,7 @@ class _ArticlePageState extends State<ArticlePage> {
                     child: TextField(
                       onChanged: filterArticles,
                       decoration: InputDecoration(
-                        hintText: 'Cari artikel...',
+                        hintText: loc.translate('search_article'),
                         prefixIcon: const Icon(Icons.search),
                         filled: true,
                         fillColor: Colors.white,
@@ -120,9 +122,9 @@ class _ArticlePageState extends State<ArticlePage> {
                   ),
                   Expanded(
                     child: filteredArticles.isEmpty
-                        ? const Center(
+                        ?  Center(
                             child: Text(
-                              "Artikel tidak ditemukan.",
+                              loc.translate('article_not_found'),
                               style: TextStyle(fontSize: 16),
                             ),
                           )
@@ -136,11 +138,11 @@ class _ArticlePageState extends State<ArticlePage> {
                               final article = filteredArticles[index];
                               final imageUrl = article['image_url'] ??
                                   'https://cdn-icons-png.flaticon.com/512/2965/2965879.png';
-                              final title = article['title'] ?? 'Tanpa Judul';
+                              final title = article['title'] ?? loc.translate('no_title');
                               final source =
-                                  article['source_name'] ?? 'Tidak diketahui';
+                                  article['source_name'] ?? loc.translate('unknown_source');
                               final content = article['description'] ??
-                                  'Tidak ada deskripsi.';
+                                  loc.translate('no_description');
 
                               return GestureDetector(
                                 onTap: () {
@@ -271,11 +273,11 @@ class _ArticlePageState extends State<ArticlePage> {
               break;
           }
         },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.mail), label: 'Inbox'),
-          BottomNavigationBarItem(icon: Icon(Icons.article), label: 'Article'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profil'),
+        items:  [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: loc.translate('home')),
+          BottomNavigationBarItem(icon: Icon(Icons.mail), label: loc.translate('inbox')),
+          BottomNavigationBarItem(icon: Icon(Icons.article), label: loc.translate('article')),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: loc.translate('profile')),
         ],
       ),
     );

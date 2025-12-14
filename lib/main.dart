@@ -10,6 +10,10 @@ import 'package:project/provider/favorite_provider.dart';
 import 'package:project/navigation_service.dart';
 import 'package:project/consultation/notification_data.dart';
 import 'onboarding.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:provider/provider.dart';
+import 'localization/locale_provider.dart';
+import 'localization/app_localizations.dart';
 
 final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 final FirebaseAnalyticsObserver observer =
@@ -26,6 +30,7 @@ Future<void> main() async {
     OverlaySupport.global(
       child: MultiProvider(
         providers: [
+          ChangeNotifierProvider(create: (_) => LocaleProvider()),
           ChangeNotifierProvider(create: (_) => ShopProvider()),
           ChangeNotifierProvider(create: (_) => ThemeProvider()),
           ChangeNotifierProvider(create: (_) => FavoriteProvider()),
@@ -43,8 +48,24 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
+    final localeProvider = Provider.of<LocaleProvider>(context);
 
     return MaterialApp(
+      locale: localeProvider.locale,
+      supportedLocales: const [
+        Locale('id'),
+        Locale('en'),
+        Locale('es'),
+        Locale('zh'),
+        Locale('ja') 
+      ],
+      localizationsDelegates: const [
+        AppLocalizationsDelegate(),
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+
       navigatorKey: navigatorKey,
       navigatorObservers: [observer], 
       debugShowCheckedModeBanner: false,

@@ -9,6 +9,7 @@ import 'package:project/fitness/fitness.dart';
 import 'package:project/health_food/healthy_food.dart';
 import 'package:project/mental_health/self_awareness_page.dart';
 import 'consultation/notification.dart';
+import 'package:project/localization/app_localizations.dart';
 
 class MainMenuPage extends StatefulWidget {
   const MainMenuPage({super.key});
@@ -35,6 +36,7 @@ class _MainMenuPageState extends State<MainMenuPage> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor:
           Theme.of(context).brightness == Brightness.dark
@@ -66,7 +68,7 @@ class _MainMenuPageState extends State<MainMenuPage> {
             ),
             ListTile(
               leading: const Icon(Icons.mail),
-              title: Text('Notifications', style: GoogleFonts.nunito()),
+              title: Text(loc.translate('menu_notifications'), style: GoogleFonts.nunito()),
               onTap: () {
                 Navigator.pushReplacement(
                   context,
@@ -76,7 +78,7 @@ class _MainMenuPageState extends State<MainMenuPage> {
             ),
             ListTile(
               leading: const Icon(Icons.person),
-              title: Text('Profile', style: GoogleFonts.nunito()),
+              title: Text(loc.translate('menu_profile'), style: GoogleFonts.nunito()),
               onTap: () {
                 Navigator.pushReplacement(
                   context,
@@ -86,7 +88,7 @@ class _MainMenuPageState extends State<MainMenuPage> {
             ),
             ListTile(
               leading: const Icon(Icons.article),
-              title: Text('Articles', style: GoogleFonts.nunito()),
+              title: Text(loc.translate('menu_articles'), style: GoogleFonts.nunito()),
               onTap: () {
                 Navigator.pushReplacement(
                   context,
@@ -97,23 +99,23 @@ class _MainMenuPageState extends State<MainMenuPage> {
             const Divider(),
             ListTile(
               leading: const Icon(Icons.logout),
-              title: Text('Logout', style: GoogleFonts.nunito()),
+              title: Text(loc.translate('menu_logout'), style: GoogleFonts.nunito()),
               onTap: () async {
                 bool? confirmLogout = await showDialog<bool>(
                   context: context,
                   builder: (context) => AlertDialog(
-                    title: Text('Konfirmasi Logout',
+                    title: Text(loc.translate('logout_title'),
                         style: GoogleFonts.nunito(fontWeight: FontWeight.bold)),
-                    content: Text('Apakah Anda yakin ingin keluar?',
+                    content: Text(loc.translate('logout_message'),
                         style: GoogleFonts.nunito()),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(context, false),
-                        child: Text('Batal', style: GoogleFonts.nunito()),
+                        child: Text(loc.translate('cancel'), style: GoogleFonts.nunito()),
                       ),
                       TextButton(
                         onPressed: () => Navigator.pop(context, true),
-                        child: Text('Ya, Keluar',
+                        child: Text(loc.translate('confirm_logout'),
                             style: GoogleFonts.nunito(
                                 fontWeight: FontWeight.bold)),
                       ),
@@ -155,14 +157,14 @@ class _MainMenuPageState extends State<MainMenuPage> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              _buildMenuCard('Fitness', 'img-project/fitness.jpeg',
+              _buildMenuCard(loc.translate('menu_fitness'), 'img-project/fitness.jpeg',
                   onTap: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => FitnessHomePage()),
                 );
               }),
-              _buildMenuCard('Healthy Food', 'img-project/healthy food.jpeg',
+              _buildMenuCard(loc.translate('menu_healthy_food'), 'img-project/healthy food.jpeg',
                   onTap: () {
                 Navigator.push(
                   context,
@@ -170,7 +172,7 @@ class _MainMenuPageState extends State<MainMenuPage> {
                 );
               }),
               _buildMenuCard(
-                'Mental Health',
+                loc.translate('menu_mental_health'),
                 'img-project/mentalhealth.jpg',
                 onTap: () {
                   Navigator.push(
@@ -180,7 +182,7 @@ class _MainMenuPageState extends State<MainMenuPage> {
                 },
               ),
               _buildMenuCard(
-                'Consultation',
+                loc.translate('menu_consultation'),
                 'img-project/consultation-1.jpeg',
                 onTap: () {
                   Navigator.push(

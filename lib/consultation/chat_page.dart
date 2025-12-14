@@ -4,7 +4,9 @@ import 'package:flutter_chat_ui/flutter_chat_ui.dart';
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
 import 'package:uuid/uuid.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:project/database/db_chat_helper.dart'; 
+
+import 'package:project/database/db_chat_helper.dart';
+import 'package:project/localization/app_localizations.dart';
 
 class ChatPage extends StatefulWidget {
   final String doctorName;
@@ -36,8 +38,10 @@ class _ChatPageState extends State<ChatPage> {
     super.dispose();
   }
 
+  // ================= LOAD CHAT =================
   Future<void> _loadMessagesFromDb() async {
     final chatData = await DBChatHelper.getMessages(widget.doctorName);
+
     setState(() {
       _messages = chatData.map((msg) {
         final author = msg['author'] == 'user' ? _user : _doctor;
@@ -57,17 +61,22 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
+  // ================= WELCOME MESSAGE =================
   void _addWelcomeMessage() async {
+    final loc = AppLocalizations.of(context);
+
     final msg = types.TextMessage(
       author: _doctor,
       createdAt: DateTime.now().millisecondsSinceEpoch,
       id: const Uuid().v4(),
-      text:
-          "Halo, saya Dr. ${widget.doctorName}. Apa yang bisa saya bantu hari ini?",
+      text: loc
+          .translate('chat_welcome')
+          .replaceAll('{name}', widget.doctorName),
     );
 
     _messages.insert(0, msg);
     _updateMessages();
+
     await DBChatHelper.insertMessage(
       widget.doctorName,
       msg.id,
@@ -77,6 +86,7 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
+  // ================= UPDATE STREAM =================
   void _updateMessages() {
     if (!_messageController.isClosed) {
       _messageController.add(List.from(_messages));
@@ -93,6 +103,7 @@ class _ChatPageState extends State<ChatPage> {
     });
   }
 
+  // ================= SEND MESSAGE =================
   void _handleSendPressed(types.PartialText message) async {
     final textMessage = types.TextMessage(
       author: _user,
@@ -103,7 +114,7 @@ class _ChatPageState extends State<ChatPage> {
 
     _messages.insert(0, textMessage);
     _updateMessages();
-    
+
     await DBChatHelper.insertMessage(
       widget.doctorName,
       textMessage.id,
@@ -115,13 +126,12 @@ class _ChatPageState extends State<ChatPage> {
     _simulateDoctorReply(message.text);
   }
 
+  // ================= DOCTOR REPLY =================
   void _simulateDoctorReply(String userText) async {
-    setState(() {
-      _isTyping = true;
-    });
+    setState(() => _isTyping = true);
 
-    final typingDelay = Duration(milliseconds: 1500 + userText.length * 50);
-    await Future.delayed(typingDelay);
+    final delay = Duration(milliseconds: 1500 + userText.length * 50);
+    await Future.delayed(delay);
 
     final reply = types.TextMessage(
       author: _doctor,
@@ -132,7 +142,7 @@ class _ChatPageState extends State<ChatPage> {
 
     _messages.insert(0, reply);
     _updateMessages();
-    
+
     await DBChatHelper.insertMessage(
       widget.doctorName,
       reply.id,
@@ -141,62 +151,65 @@ class _ChatPageState extends State<ChatPage> {
       reply.createdAt!,
     );
 
-    setState(() {
-      _isTyping = false;
-    });
+    setState(() => _isTyping = false);
   }
 
+  // ================= REPLY LOGIC =================
   String _generateReply(String userText) {
+    final loc = AppLocalizations.of(context);
     final text = userText.toLowerCase();
 
     if (text.contains("hai") || text.contains("halo") || text.contains("hi")) {
-      return "Hai juga! Gimana kabarmu hari ini? Kalau lagi ngerasa gak enak badan atau pikiran, boleh banget cerita ke aku ya.";
+      return loc.translate('reply_greeting');
     } else if (text.contains("pagi")) {
-      return "Selamat pagi! Ada keluhan atau hal yang ingin dibicarakan hari ini?";
+      return loc.translate('reply_morning');
     } else if (text.contains("siang")) {
-      return "Selamat siang! Ada yang bisa saya bantu?";
+      return loc.translate('reply_afternoon');
     } else if (text.contains("sore")) {
-      return "Selamat sore! Ceritain ke aku ya, gimana harimu?";
+      return loc.translate('reply_evening');
     } else if (text.contains("malam")) {
-      return "Selamat malam! Sebelum tidur, boleh cerita sedikit biar pikiran lebih tenang.";
+      return loc.translate('reply_night');
     } else if (text.contains("terima kasih") || text.contains("makasih")) {
-      return "Sama-sama~ Senang bisa bantu kamu! Kalau masih ada yang mau ditanyain, jangan sungkan ya 😊";
+      return loc.translate('reply_thanks');
     } else if (text.contains("cerita")) {
-      return "Boleh banget! Ceritain aja, aku siap dengerin dan bantu sebisaku.";
+      return loc.translate('reply_story');
     } else if (text.contains("cemas")) {
-      return "Wajar kok ngerasa cemas. Coba atur napas pelan-pelan, tenangkan diri dulu. Ceritain ke aku biar kita bisa cari penyebabnya bareng.";
+      return loc.translate('reply_anxious');
     } else if (text.contains("stres") || text.contains("stress")) {
-      return "Stres bisa datang dari banyak hal. Coba luangkan waktu buat diri sendiri dulu, kayak jalan santai, meditasi, atau denger musik yang kamu suka.";
+      return loc.translate('reply_stress');
     } else if (text.contains("sedih") || text.contains("kecewa")) {
-      return "Sedih itu manusiawi kok. Tapi jangan lupa buat jaga diri ya. Kadang istirahat atau ngobrol sama orang dekat bisa bantu sedikit lega.";
+      return loc.translate('reply_sad');
     } else if (text.contains("tidur")) {
-      return "Masalah tidur sering banget terjadi. Coba hindari HP atau kopi sebelum tidur, dan biasakan jam tidur yang teratur ya.";
+      return loc.translate('reply_sleep');
     } else if (text.contains("capek") || text.contains("lelah")) {
-      return "Capek ya? Kadang tubuh juga butuh istirahat sejenak. Jangan lupa minum air putih dan makan teratur juga ya.";
+      return loc.translate('reply_tired');
     } else if (text.contains("marah")) {
-      return "Kalau lagi marah, gak apa-apa kok. Tapi coba kasih waktu buat tenang dulu. Nulis perasaanmu di catatan bisa bantu loh.";
+      return loc.translate('reply_angry');
     } else if (text.contains("sendiri") || text.contains("kesepian")) {
-      return "Perasaan sendiri itu berat ya. Coba hubungi teman atau keluarga, atau keluar cari suasana baru, kadang bisa bantu perasaanmu lebih baik.";
+      return loc.translate('reply_lonely');
     } else if (text.contains("tidak baik") || text.contains("kurang baik")) {
-      return "Lagi gak enak badan ya? Mau cerita sedikit soal apa yang kamu rasain biar aku bisa bantu?";
+      return loc.translate('reply_unwell');
     } else {
-      return "Hmm, aku paham kok. Ceritain lebih lanjut ya biar aku bisa bantu lebih banyak 😊";
+      return loc.translate('reply_default');
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context);
+
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: const Color(0xff0D273D),
         iconTheme: const IconThemeData(color: Colors.white),
         title: Text(
-          "Konsultasi dengan Dr. ${widget.doctorName}",
+          loc.translate('chat_title')
+              .replaceAll('{name}', widget.doctorName),
           style: GoogleFonts.nunito(
             color: Colors.white,
             fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: const Color(0xff0D273D),
       ),
       body: Column(
         children: [
@@ -205,9 +218,8 @@ class _ChatPageState extends State<ChatPage> {
               stream: _messageController.stream,
               initialData: _messages,
               builder: (context, snapshot) {
-                final messages = snapshot.data ?? [];
                 return Chat(
-                  messages: messages,
+                  messages: snapshot.data ?? [],
                   onSendPressed: _handleSendPressed,
                   user: _user,
                   theme: const DefaultChatTheme(
@@ -223,18 +235,18 @@ class _ChatPageState extends State<ChatPage> {
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   const SizedBox(width: 16),
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
                       color: Colors.grey.shade200,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      "Dr. ${widget.doctorName} sedang mengetik...",
+                      loc.translate('typing_indicator')
+                          .replaceAll('{name}', widget.doctorName),
                       style: GoogleFonts.nunito(fontSize: 13),
                     ),
                   ),

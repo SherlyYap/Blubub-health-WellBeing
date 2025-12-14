@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'DoctorDetailPage.dart';
 import '../provider/favorite_provider.dart';
+import 'package:project/localization/app_localizations.dart';
 
 class FavoriteDoctorsPage extends StatelessWidget {
   const FavoriteDoctorsPage({super.key});
@@ -10,11 +11,12 @@ class FavoriteDoctorsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final favoriteDoctors = Provider.of<FavoriteProvider>(context).favoriteDoctors;
+    final loc = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          "Favorite Doctors",
+          loc.translate('favorite_doctors'),
           style: GoogleFonts.nunito(fontWeight: FontWeight.bold, color: Colors.white),
         ),
         backgroundColor: const Color(0xff0D273D),
@@ -24,7 +26,7 @@ class FavoriteDoctorsPage extends StatelessWidget {
       body: favoriteDoctors.isEmpty
           ? Center(
               child: Text(
-                "Belum ada dokter yang disukai.",
+                loc.translate('no_favorite_doctors'),
                 style: GoogleFonts.nunito(fontSize: 16),
               ),
             )
