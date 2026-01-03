@@ -101,9 +101,7 @@ class _FoodMenuPageState extends State<FoodMenuPage> {
           padding: EdgeInsets.zero,
           children: [
             DrawerHeader(
-              decoration: const BoxDecoration(
-                color: Color(0xff0D273D),
-              ),
+              decoration: const BoxDecoration(color: Color(0xff0D273D)),
               child: Text(
                 'Menu',
                 style: GoogleFonts.nunito(fontSize: 30, color: Colors.white),
@@ -254,26 +252,37 @@ class _FoodMenuPageState extends State<FoodMenuPage> {
                         ),
                       ],
                     ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.search, color: Color(0xff0D273D)),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: TextField(
-                            onChanged: (value) {
-                              setState(() {
-                                searchQuery = value;
-                                selectedCategory = 'All';
-                              });
-                            },
-                            decoration: InputDecoration(
-                              border: InputBorder.none,
-                              hintText: 'Find Recipe Here...',
-                              hintStyle: GoogleFonts.nunito(color: Colors.grey),
+                    child: Semantics(
+                      label: 'Kolom pencarian resep',
+                      hint: 'Masukkan nama resep yang ingin dicari',
+                      textField: true,
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.search,
+                            color: Color(0xff0D273D),
+                            semanticLabel: 'Ikon pencarian',
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: TextField(
+                              onChanged: (value) {
+                                setState(() {
+                                  searchQuery = value;
+                                  selectedCategory = 'All';
+                                });
+                              },
+                              decoration: InputDecoration(
+                                border: InputBorder.none,
+                                hintText: 'Find Recipe Here...',
+                                hintStyle: GoogleFonts.nunito(
+                                  color: Colors.grey,
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -288,40 +297,52 @@ class _FoodMenuPageState extends State<FoodMenuPage> {
                       itemBuilder: (context, index) {
                         final category = categories[index];
                         final isSelected = category == selectedCategory;
+
                         return Padding(
                           padding: const EdgeInsets.only(right: 12),
-                          child: ChoiceChip(
-                            label: Container(
-                              constraints: const BoxConstraints(minWidth: 80),
-                              child: Text(
-                                category,
-                                textAlign: TextAlign.center,
-                                style: GoogleFonts.nunito(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 14,
+                          child: Semantics(
+                            label: 'Kategori $category',
+                            hint:
+                                isSelected
+                                    ? 'Kategori sedang dipilih'
+                                    : 'Ketuk untuk memfilter resep berdasarkan kategori $category',
+                            button: true,
+                            selected: isSelected,
+                            child: ChoiceChip(
+                              label: Container(
+                                constraints: const BoxConstraints(minWidth: 80),
+                                child: Text(
+                                  category,
+                                  textAlign: TextAlign.center,
+                                  style: GoogleFonts.nunito(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                  ),
                                 ),
                               ),
+                              selected: isSelected,
+                              selectedColor: const Color(0xff0D273D),
+                              backgroundColor: Colors.white,
+                              labelStyle: GoogleFonts.nunito(
+                                color:
+                                    isSelected ? Colors.white : Colors.black87,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                              onSelected: (_) {
+                                setState(() {
+                                  selectedCategory = category;
+                                });
+                              },
                             ),
-                            selected: isSelected,
-                            selectedColor: const Color(0xff0D273D),
-                            backgroundColor: Colors.white,
-                            labelStyle: GoogleFonts.nunito(
-                              color: isSelected ? Colors.white : Colors.black87,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                            onSelected: (_) {
-                              setState(() {
-                                selectedCategory = category;
-                              });
-                            },
                           ),
                         );
                       },
                     ),
                   ),
                 ),
+
                 const SizedBox(height: 15),
                 Expanded(
                   child: Padding(
@@ -337,80 +358,90 @@ class _FoodMenuPageState extends State<FoodMenuPage> {
                       itemCount: filteredFoods.length,
                       itemBuilder: (context, index) {
                         final food = filteredFoods[index];
-                        return GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder:
-                                    (_) => RecipePage(
-                                      title: food.title,
-                                      image: food.image,
-                                      description: food.description,
-                                      rating: food.rating.toString(),
-                                    ),
+                        return Semantics(
+                          button: true,
+                          label:
+                              'Resep ${food.title}, rating ${food.rating.toStringAsFixed(1)}',
+                          hint: 'Ketuk untuk melihat detail resep',
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(12),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (_) => RecipePage(
+                                        title: food.title,
+                                        image: food.image,
+                                        description: food.description,
+                                        rating: food.rating.toString(),
+                                      ),
+                                ),
+                              );
+                            },
+                            child: Card(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                            );
-                          },
-                          child: Card(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            elevation: 3,
-                            clipBehavior: Clip.antiAlias,
-                            child: Column(
-                              children: [
-                                AspectRatio(
-                                  aspectRatio: 4 / 3,
-                                  child: Image.asset(
-                                    food.image,
-                                    fit: BoxFit.cover,
-                                    width: double.infinity,
+                              elevation: 3,
+                              clipBehavior: Clip.antiAlias,
+                              child: Column(
+                                children: [
+                                  AspectRatio(
+                                    aspectRatio: 4 / 3,
+                                    child: Image.asset(
+                                      food.image,
+                                      fit: BoxFit.cover,
+                                      width: double.infinity,
+                                      semanticLabel:
+                                          'Gambar makanan ${food.title}',
+                                    ),
                                   ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.all(10.0),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        food.title,
-                                        style: GoogleFonts.nunito(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
+                                  Padding(
+                                    padding: const EdgeInsets.all(10.0),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          food.title,
+                                          style: GoogleFonts.nunito(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
                                         ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Row(
-                                        children: [
-                                          const Icon(
-                                            Icons.star,
-                                            color: Colors.amber,
-                                            size: 16,
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            food.rating.toStringAsFixed(1),
-                                            style: GoogleFonts.nunito(
-                                              fontSize: 14,
+                                        const SizedBox(height: 4),
+                                        Row(
+                                          children: [
+                                            const Icon(
+                                              Icons.star,
+                                              color: Colors.amber,
+                                              size: 16,
+                                              semanticLabel: 'Rating',
                                             ),
-                                          ),
-                                          Text(
-                                            ' (413)',
-                                            style: GoogleFonts.nunito(
-                                              fontSize: 12,
-                                              color: Colors.grey,
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              food.rating.toStringAsFixed(1),
+                                              style: GoogleFonts.nunito(
+                                                fontSize: 14,
+                                              ),
                                             ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
+                                            Text(
+                                              ' (413)',
+                                              style: GoogleFonts.nunito(
+                                                fontSize: 12,
+                                                color: Colors.grey,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         );
