@@ -1,12 +1,13 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_background_service/flutter_background_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class WorkoutSessionPage extends StatefulWidget {
   final String workoutName;
-  final String workoutImage; 
+  final String workoutImage;
   final String workoutDescription;
-  final int duration;
+  final int duration; // dari slider (menit)
 
   const WorkoutSessionPage({
     super.key,
@@ -21,64 +22,104 @@ class WorkoutSessionPage extends StatefulWidget {
 }
 
 class _WorkoutSessionPageState extends State<WorkoutSessionPage> {
-  late int _remainingSeconds;
-  Timer? _timer;
+  final FlutterBackgroundService _service = FlutterBackgroundService();
+
+  int _remainingSeconds = 0;
+  bool _started = false;
+  bool _restoredFromBackground = false;
 
   @override
   void initState() {
     super.initState();
-    _startTimer();
+    _restoreTimer();
   }
 
-  void _startTimer() {
-    _remainingSeconds = widget.duration * 60;
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_remainingSeconds == 0) {
-        timer.cancel();
-        _showFinishDialog();
-      } else {
+  // ================= RESTORE TIMER =================
+  Future<void> _restoreTimer() async {
+    final prefs = await SharedPreferences.getInstance();
+    final endTime = prefs.getInt('endTime');
+
+    if (endTime == null) return;
+
+    final remaining =
+        DateTime.fromMillisecondsSinceEpoch(endTime)
+            .difference(DateTime.now());
+
+    if (remaining.inSeconds <= 0) {
+      await prefs.remove('endTime');
+      return;
+    }
+
+    setState(() {
+      _started = true;
+      _restoredFromBackground = true;
+      _remainingSeconds = remaining.inSeconds;
+    });
+
+    _listenService();
+  }
+
+  // ================= LISTEN BACKGROUND =================
+  void _listenService() {
+    _service.on('update').listen((event) {
+      if (!mounted || event == null) return;
+
+      final time = event['time'];
+      if (time != null) {
+        final parts = time.split(':');
+        final m = int.parse(parts[0]);
+        final s = int.parse(parts[1]);
+
         setState(() {
-          _remainingSeconds--;
+          _remainingSeconds = m * 60 + s;
         });
       }
     });
   }
 
-  void _showFinishDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text("Selesai!", style: GoogleFonts.nunito()),
-        content: Text(
-          "Latihan telah selesai. Bagus banget! 💪",
-          style: GoogleFonts.nunito(),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              Navigator.of(context).pop();
-            },
-            child: Text("Kembali", style: GoogleFonts.nunito()),
-          ),
-        ],
-      ),
-    );
+  // ================= START WORKOUT =================
+  Future<void> _startWorkout() async {
+    if (_started) return;
+
+    final prefs = await SharedPreferences.getInstance();
+
+    // 🔥 pastikan timer lama dihapus
+    await prefs.remove('endTime');
+
+    final endTime = DateTime.now()
+        .add(Duration(minutes: widget.duration))
+        .millisecondsSinceEpoch;
+
+    await prefs.setInt('endTime', endTime);
+
+    await _service.startService();
+    _listenService();
+
+    setState(() {
+      _started = true;
+    });
   }
 
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
+  // ================= STOP WORKOUT =================
+  Future<void> _stopWorkout() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    await prefs.remove('endTime');
+    _service.invoke('stopService');
+
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    if (mounted) Navigator.pop(context);
   }
 
-  String _formatTime(int totalSeconds) {
-    final minutes = totalSeconds ~/ 60;
-    final seconds = totalSeconds % 60;
-    return "${minutes.toString().padLeft(2, '0')} : ${seconds.toString().padLeft(2, '0')}";
+  // ================= FORMAT =================
+  String _formatTime(int seconds) {
+    final m = seconds ~/ 60;
+    final s = seconds % 60;
+    return "${m.toString().padLeft(2, '0')} : ${s.toString().padLeft(2, '0')}";
   }
 
+  // ================= UI =================
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -86,34 +127,20 @@ class _WorkoutSessionPageState extends State<WorkoutSessionPage> {
       appBar: AppBar(
         title: Text("Sesi Latihan", style: GoogleFonts.nunito()),
         backgroundColor: const Color.fromARGB(255, 202, 231, 255),
-        elevation: 2,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(20),
               child: Image.network(
                 widget.workoutImage,
-                height: 250,
+                height: 240,
                 width: double.infinity,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
-                  height: 200,
-                  color: Colors.grey[300],
-                  alignment: Alignment.center,
-                  child: const Icon(Icons.broken_image, size: 80, color: Colors.grey),
-                ),
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return Container(
-                    height: 200,
-                    alignment: Alignment.center,
-                    child: const CircularProgressIndicator(color: Color(0xff0D273D)),
-                  );
-                },
+                errorBuilder: (_, __, ___) =>
+                    const Icon(Icons.broken_image, size: 80),
               ),
             ),
 
@@ -123,62 +150,77 @@ class _WorkoutSessionPageState extends State<WorkoutSessionPage> {
               widget.workoutName,
               textAlign: TextAlign.center,
               style: GoogleFonts.nunito(
-                fontSize: 28,
+                fontSize: 26,
                 fontWeight: FontWeight.bold,
-                color: Colors.black87,
               ),
             ),
 
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
 
             Text(
               widget.workoutDescription,
               textAlign: TextAlign.center,
-              style: GoogleFonts.nunito(fontSize: 16, color: Colors.black54),
+              style: GoogleFonts.nunito(fontSize: 16),
             ),
 
             const SizedBox(height: 30),
 
-            Text(
-              "Waktu Tersisa:",
-              style: GoogleFonts.nunito(fontSize: 20, fontWeight: FontWeight.w500),
-            ),
-            const SizedBox(height: 10),
-            Container(
-              width: 150,
-              height: 150,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: const Color.fromARGB(255, 35, 76, 110),
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                _formatTime(_remainingSeconds),
-                style: GoogleFonts.nunito(
-                  fontSize: 36,
-                  fontWeight: FontWeight.bold,
-                  color: const Color.fromARGB(255, 202, 231, 255),
+            // ===== BUTTON START (ONLY IF NEW) =====
+            if (!_started && !_restoredFromBackground)
+              ElevatedButton.icon(
+                onPressed: _startWorkout,
+                icon: const Icon(Icons.play_arrow),
+                label: Text(
+                  "Mulai Workout",
+                  style: GoogleFonts.nunito(fontSize: 18),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xff0D273D),
+                  foregroundColor: Colors.white,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
                 ),
               ),
-            ),
 
-            const SizedBox(height: 30),
-
-            ElevatedButton.icon(
-              onPressed: () {
-                _timer?.cancel();
-                Navigator.pop(context);
-              },
-              icon: const Icon(Icons.stop_circle, size: 28),
-              label: Text("Akhiri Latihan", style: GoogleFonts.nunito(fontSize: 18)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xff0D273D),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                elevation: 5,
+            // ===== TIMER =====
+            if (_started) ...[
+              const SizedBox(height: 20),
+              Text("Waktu Tersisa",
+                  style: GoogleFonts.nunito(fontSize: 20)),
+              const SizedBox(height: 10),
+              Container(
+                width: 150,
+                height: 150,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Color.fromARGB(255, 35, 76, 110),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  _formatTime(_remainingSeconds),
+                  style: GoogleFonts.nunito(
+                    fontSize: 36,
+                    fontWeight: FontWeight.bold,
+                    color: const Color.fromARGB(255, 202, 231, 255),
+                  ),
+                ),
               ),
-            ),
+              const SizedBox(height: 30),
+              ElevatedButton.icon(
+                onPressed: _stopWorkout,
+                icon: const Icon(Icons.stop_circle),
+                label: Text(
+                  "Akhiri Latihan",
+                  style: GoogleFonts.nunito(fontSize: 18),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                ),
+              ),
+            ],
           ],
         ),
       ),

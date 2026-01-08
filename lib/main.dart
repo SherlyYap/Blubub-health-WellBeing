@@ -11,9 +11,12 @@ import 'package:project/navigation_service.dart';
 import 'package:project/consultation/notification_data.dart';
 import 'onboarding.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:provider/provider.dart';
 import 'localization/locale_provider.dart';
 import 'localization/app_localizations.dart';
+import 'package:flutter_background_service/flutter_background_service.dart';
+import 'services/notification_service.dart';
+import 'services/background_timer_service.dart';
+
 
 final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 final FirebaseAnalyticsObserver observer =
@@ -24,6 +27,20 @@ Future<void> main() async {
   await Firebase.initializeApp();
   await analytics.setSessionTimeoutDuration(const Duration(minutes: 30));
   await analytics.logEvent(name: 'app_started');
+  await initNotifications();
+
+  // 🔄 Background service workout timer
+  await FlutterBackgroundService().configure(
+    androidConfiguration: AndroidConfiguration(
+      onStart: onStart,
+      isForegroundMode: true,
+      autoStart: false,
+    ),
+    iosConfiguration: IosConfiguration(
+      onForeground: (_) {},
+      onBackground: (_) async => true,
+    ),
+  );
   await loadNotifications();
 
   runApp(
