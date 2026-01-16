@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:project/ads/interstitial_ad_helper.dart';
 import 'package:project/database/test_history_db.dart';
 
 class TestQuestionPage extends StatefulWidget {
@@ -442,6 +443,7 @@ class _TestQuestionPageState extends State<TestQuestionPage> {
   @override
   void initState() {
     super.initState();
+    InterstitialAdHelper.loadAd();
     questions = testQuestions[widget.testType] ?? [];
   }
 
@@ -457,27 +459,32 @@ class _TestQuestionPageState extends State<TestQuestionPage> {
   }
 
 Future<void> _finishTest() async {
-  final now = DateTime.now().toIso8601String(); 
+  final now = DateTime.now().toIso8601String();
   await TestHistoryDB.insertResult(widget.testType, score, now);
 
-  showDialog(
-    context: context,
-    builder: (ctx) => AlertDialog(
-      title: const Text("Tes Selesai"),
-      content: Text(
-        "Skor kamu: $score dari ${questions.length}\n\nHasil ini disimpan ke riwayat tes.",
-        style: GoogleFonts.nunito(fontSize: 16),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () {
-            Navigator.pop(ctx);
-            Navigator.pop(context);
-          },
-          child: const Text("OK"),
+  InterstitialAdHelper.showAd(
+    onAdClosed: () {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => AlertDialog(
+          title: const Text("Tes Selesai"),
+          content: Text(
+            "Skor kamu: $score dari ${questions.length}\n\nHasil ini disimpan ke riwayat tes.",
+            style: GoogleFonts.nunito(fontSize: 16),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                Navigator.pop(context);
+              },
+              child: const Text("OK"),
+            ),
+          ],
         ),
-      ],
-    ),
+      );
+    },
   );
 }
 
