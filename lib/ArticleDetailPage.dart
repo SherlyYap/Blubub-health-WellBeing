@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
-class ArticleDetailPageFancy extends StatelessWidget {
+class ArticleDetailPageFancy extends StatefulWidget {
   final String title;
   final String category;
   final String content;
@@ -16,6 +17,43 @@ class ArticleDetailPageFancy extends StatelessWidget {
   });
 
   @override
+  State<ArticleDetailPageFancy> createState() =>
+      _ArticleDetailPageFancyState();
+}
+
+class _ArticleDetailPageFancyState extends State<ArticleDetailPageFancy> {
+  BannerAd? _bannerAd;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBannerAd();
+  }
+
+  void _loadBannerAd() {
+    _bannerAd = BannerAd(
+      adUnitId: 'ca-app-pub-3940256099942544/6300978111', // TEST ID
+      size: AdSize.banner,
+      request: const AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (_) {
+          setState(() {});
+        },
+        onAdFailedToLoad: (ad, error) {
+          ad.dispose();
+          _bannerAd = null;
+        },
+      ),
+    )..load();
+  }
+
+  @override
+  void dispose() {
+    _bannerAd?.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF9FDF9),
@@ -25,10 +63,11 @@ class ArticleDetailPageFancy extends StatelessWidget {
             Stack(
               children: [
                 ClipRRect(
-                  borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
-                  child: imageUrl.isNotEmpty
+                  borderRadius:
+                      const BorderRadius.vertical(bottom: Radius.circular(24)),
+                  child: widget.imageUrl.isNotEmpty
                       ? Image.network(
-                          imageUrl,
+                          widget.imageUrl,
                           width: double.infinity,
                           height: 250,
                           fit: BoxFit.cover,
@@ -37,16 +76,22 @@ class ArticleDetailPageFancy extends StatelessWidget {
                           width: double.infinity,
                           height: 250,
                           color: const Color.fromARGB(255, 202, 231, 255),
-                          child: const Icon(Icons.image, size: 80, color: Colors.grey),
+                          child: const Icon(
+                            Icons.image,
+                            size: 80,
+                            color: Colors.grey,
+                          ),
                         ),
                 ),
                 Positioned(
                   top: 16,
                   left: 16,
                   child: CircleAvatar(
-                    backgroundColor: const Color.fromARGB(255, 202, 231, 255),
+                    backgroundColor:
+                        const Color.fromARGB(255, 202, 231, 255),
                     child: IconButton(
-                      icon: const Icon(Icons.arrow_back, color: Colors.black),
+                      icon:
+                          const Icon(Icons.arrow_back, color: Colors.black),
                       onPressed: () => Navigator.pop(context),
                     ),
                   ),
@@ -58,7 +103,8 @@ class ArticleDetailPageFancy extends StatelessWidget {
                 padding: const EdgeInsets.all(24),
                 decoration: const BoxDecoration(
                   color: Color.fromARGB(255, 202, 231, 255),
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                  borderRadius:
+                      BorderRadius.vertical(top: Radius.circular(24)),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black12,
@@ -72,13 +118,15 @@ class ArticleDetailPageFancy extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: const Color.fromARGB(255, 85, 157, 216).withOpacity(0.15),
+                          color: const Color.fromARGB(255, 85, 157, 216)
+                              .withOpacity(0.15),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          category,
+                          widget.category,
                           style: GoogleFonts.nunito(
                             color: const Color(0xff0D273D),
                             fontSize: 12,
@@ -88,7 +136,7 @@ class ArticleDetailPageFancy extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        title,
+                        widget.title,
                         style: GoogleFonts.nunito(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
@@ -98,13 +146,23 @@ class ArticleDetailPageFancy extends StatelessWidget {
                       ),
                       const SizedBox(height: 24),
                       Text(
-                        content,
+                        widget.content,
                         style: GoogleFonts.nunito(
                           fontSize: 16,
                           height: 1.6,
                           color: Colors.black87,
                         ),
                       ),
+                      const SizedBox(height: 24),
+
+                      if (_bannerAd != null)
+                        Center(
+                          child: SizedBox(
+                            width: _bannerAd!.size.width.toDouble(),
+                            height: _bannerAd!.size.height.toDouble(),
+                            child: AdWidget(ad: _bannerAd!),
+                          ),
+                        ),
                     ],
                   ),
                 ),

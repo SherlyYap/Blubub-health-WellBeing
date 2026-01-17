@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 class QuotesPage extends StatefulWidget {
   const QuotesPage({super.key});
@@ -16,40 +17,76 @@ class _QuotesPageState extends State<QuotesPage> {
   bool _isLoading = true;
   String? _error;
 
+  RewardedAd? _rewardedAd;
+  bool _isPremiumUnlocked = false;
+
   @override
   void initState() {
     super.initState();
     _fetchQuotes();
+    _loadRewardedAd();
+  }
+
+  void _loadRewardedAd() {
+    RewardedAd.load(
+      adUnitId: 'ca-app-pub-3940256099942544/5224354917',
+      request: const AdRequest(),
+      rewardedAdLoadCallback: RewardedAdLoadCallback(
+        onAdLoaded: (ad) {
+          _rewardedAd = ad;
+        },
+        onAdFailedToLoad: (error) {
+          _rewardedAd = null;
+        },
+      ),
+    );
+  }
+
+  void _showRewardedAd() {
+    if (_rewardedAd == null) return;
+
+    _rewardedAd!.show(
+      onUserEarnedReward: (ad, reward) {
+        setState(() {
+          _isPremiumUnlocked = true;
+        });
+      },
+    );
+
+    _rewardedAd = null;
+    _loadRewardedAd();
   }
 
   Future<void> _fetchQuotes() async {
     try {
-      final url = Uri.parse('https://zenquotes.io/api/quotes');
-      final response = await http.get(url);
+      final response =
+          await http.get(Uri.parse('https://zenquotes.io/api/quotes'));
 
       if (response.statusCode == 200) {
         final List<dynamic> jsonResponse = json.decode(response.body);
         setState(() {
           _quotes = jsonResponse
               .map((q) => {
-                    'en': (q['q'] ?? 'No quote available.').toString(),
-                    'id': (q['a'] ?? 'Unknown Author').toString(),
+                    'en': q['q'].toString(),
+                    'id': q['a'].toString(),
                   })
               .toList();
           _isLoading = false;
         });
       } else {
-        setState(() {
-          _error = 'Gagal mengambil data: ${response.statusCode}';
-          _isLoading = false;
-        });
+        _error = 'Gagal mengambil data';
+        _isLoading = false;
       }
     } catch (e) {
-      setState(() {
-        _error = e.toString();
-        _isLoading = false;
-      });
+      _error = e.toString();
+      _isLoading = false;
     }
+  }
+
+  @override
+  void dispose() {
+    _rewardedAd?.dispose();
+    super.dispose();
   }
 
   @override
@@ -61,8 +98,8 @@ class _QuotesPageState extends State<QuotesPage> {
           'All Quotes',
           style: GoogleFonts.nunito(
             fontSize: 20,
-            color: Colors.black,
             fontWeight: FontWeight.bold,
+            color: Colors.black,
           ),
         ),
         backgroundColor: const Color(0xFFE6F0FF),
@@ -72,75 +109,94 @@ class _QuotesPageState extends State<QuotesPage> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-              ? Center(
-                  child: Text(
-                    'Error: $_error',
-                    style: const TextStyle(color: Colors.red),
-                  ),
-                )
-              : Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: MasonryGridView.count(
-                    crossAxisCount: MediaQuery.of(context).size.width > 900
-                        ? 4
-                        : MediaQuery.of(context).size.width > 600
-                            ? 3
-                            : 2,
-                    mainAxisSpacing: 16,
-                    crossAxisSpacing: 16,
-                    itemCount: _quotes.length,
-                    itemBuilder: (context, index) {
-                      final quote = _quotes[index];
-                      return Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: Colors.blueAccent.withOpacity(0.3),
-                            width: 1.5,
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    Text(
+                      'Quote Premium 🔒',
+                      style: GoogleFonts.nunito(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    _isPremiumUnlocked
+                        ? Text(
+                            '“Kesuksesan adalah hasil dari konsistensi kecil setiap hari.”',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.nunito(
+                              fontStyle: FontStyle.italic,
+                            ),
+                          )
+                        : ElevatedButton(
+                            onPressed: _showRewardedAd,
+                            child: const Text('Tonton Iklan'),
                           ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.blueGrey.withOpacity(0.15),
-                              blurRadius: 8,
-                              offset: const Offset(2, 4),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          children: [
-                            const Icon(Icons.format_quote,
-                                color: Colors.blueGrey, size: 32),
-                            const SizedBox(height: 10),
-                            Text(
-                              quote['en']!,
-                              textAlign: TextAlign.center,
-                              style: GoogleFonts.nunito(
-                                fontSize: 16,
-                                fontStyle: FontStyle.italic,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.black87,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              '- ${quote['id']}',
-                              textAlign: TextAlign.center,
-                              style: GoogleFonts.nunito(
-                                fontSize: 14,
-                                color: Colors.black54,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
+                  ],
                 ),
+              ),
+            ),
+          ),
+
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _error != null
+                    ? Center(child: Text(_error!))
+                    : Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: MasonryGridView.count(
+                          crossAxisCount:
+                              MediaQuery.of(context).size.width > 900
+                                  ? 4
+                                  : MediaQuery.of(context).size.width > 600
+                                      ? 3
+                                      : 2,
+                          mainAxisSpacing: 16,
+                          crossAxisSpacing: 16,
+                          itemCount: _quotes.length,
+                          itemBuilder: (context, index) {
+                            final quote = _quotes[index];
+                            return Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Column(
+                                children: [
+                                  const Icon(Icons.format_quote),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    quote['en']!,
+                                    textAlign: TextAlign.center,
+                                    style: GoogleFonts.nunito(
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    '- ${quote['id']}',
+                                    style: GoogleFonts.nunito(fontSize: 13),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+          ),
+        ],
+      ),
     );
   }
-} 
+}
