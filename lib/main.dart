@@ -18,7 +18,8 @@ import 'package:flutter_background_service/flutter_background_service.dart';
 import 'services/notification_service.dart';
 import 'services/background_timer_service.dart';
 
-
+final GlobalKey<NavigatorState> navigatorKey =
+    GlobalKey<NavigatorState>();
 final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 final FirebaseAnalyticsObserver observer =
     FirebaseAnalyticsObserver(analytics: analytics);
@@ -31,7 +32,7 @@ Future<void> main() async {
   await analytics.logEvent(name: 'app_started');
   await initNotifications();
 
-  // 🔄 Background service workout timer
+  //Background service workout timer
   await FlutterBackgroundService().configure(
     androidConfiguration: AndroidConfiguration(
       onStart: onStart,
