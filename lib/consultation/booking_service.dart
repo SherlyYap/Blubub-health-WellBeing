@@ -25,7 +25,6 @@ class BookingService {
       docId: docRef.id,
     );
 
-    // TAMPILKAN NOTIFIKASI
     showCustomNotification(
       title: "Booking Berhasil",
       message: "Booking dengan $doctorName pada $date pukul $time",

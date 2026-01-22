@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.example.study1"
-    ndkVersion = "27.0.12077973"
+    ndkVersion = "26.1.10909125"
     compileSdk = 35
 
     defaultConfig {
